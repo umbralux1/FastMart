@@ -1,0 +1,317 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #f5f6f8;
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
+header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+header h1 {
+  font-size: 22px;
+  color: #16a34a;
+}
+
+header nav a {
+  margin-left: 16px;
+  text-decoration: none;
+  color: #374151;
+  font-weight: 500;
+}
+
+header nav a:hover { color: #16a34a; }
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Каталог */
+.filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filters input, .filters select {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+}
+
+.filters input:focus, .filters select:focus {
+  border-color: #16a34a;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+}
+
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+.card h3 { font-size: 16px; margin-bottom: 6px; }
+
+.card .cat {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.card .desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.card .stock {
+  font-size: 12px;
+  color: #16a34a;
+  margin-bottom: 8px;
+}
+
+.card .stock.out { color: #dc2626; }
+
+.card .price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #16a34a;
+  color: #fff;
+  transition: background 0.15s;
+}
+
+button:hover { background: #15803d; }
+button:disabled { background: #d1d5db; cursor: not-allowed; }
+
+button.secondary {
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+button.secondary:hover { background: #f9fafb; }
+
+button.danger { background: #dc2626; }
+button.danger:hover { background: #b91c1c; }
+
+/* Корзина */
+.cart {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  padding: 20px;
+  width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.cart h3 { margin-bottom: 12px; font-size: 18px; }
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+}
+
+.cart-item .qty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cart-item .qty button {
+  padding: 2px 8px;
+  font-size: 14px;
+  background: #f3f4f6;
+  color: #111;
+}
+.cart-item .qty button:hover { background: #e5e7eb; }
+
+.cart-total {
+  margin-top: 12px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.cart .checkout {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+}
+
+/* Формы */
+.form-box {
+  max-width: 400px;
+  margin: 60px auto;
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.form-box h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-align: center;
+}
+
+.form-box input, .form-box textarea {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+}
+
+.form-box input:focus, .form-box textarea:focus {
+  border-color: #16a34a;
+}
+
+.form-box button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.form-box .switch {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.form-box .switch a { color: #16a34a; text-decoration: none; font-weight: 600; }
+
+.msg {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  display: none;
+}
+.msg.err { background: #fee2e2; color: #991b1b; display: block; }
+.msg.ok  { background: #dcfce7; color: #166534; display: block; }
+
+/* Заказы */
+.order {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.order-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.order-id { font-weight: 700; font-size: 16px; }
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.pending    { background: #fef3c7; color: #92400e; }
+.badge.confirmed  { background: #dbeafe; color: #1e40af; }
+.badge.delivering { background: #e0e7ff; color: #3730a3; }
+.badge.delivered  { background: #dcfce7; color: #166534; }
+.badge.cancelled  { background: #fee2e2; color: #991b1b; }
+
+.order-items {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.order-items li { margin-left: 20px; }
+
+.order-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+  font-size: 14px;
+}
+
+.order-total { font-size: 18px; font-weight: 700; }
+
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.toast {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  background: #111;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 100;
+}
+.toast.show { opacity: 1; }

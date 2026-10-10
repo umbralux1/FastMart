@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Мои заказы — Dark Store</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <div class="container">
+    <h2 style="margin-bottom: 20px;">Мои заказы</h2>
+    <div id="orders"></div>
+    <div id="empty" class="empty" style="display:none">
+      У вас пока нет заказов.<br><br>
+      <a href="/" style="color:#16a34a; font-weight:600;">Перейти в каталог →</a>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const STATUS_RU = {
+      pending:    "Ожидает",
+      confirmed:  "Подтверждён",
+      delivering: "В доставке",
+      delivered:  "Доставлен",
+      cancelled:  "Отменён",
+    };
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      })[c]);
+    }
+
+    async function loadOrders() {
+      if (!auth.isLoggedIn()) {
+        location.href = "/login.html";
+        return;
+      }
+      try {
+        const orders = await api("/orders/my");
+        renderOrders(orders);
+      } catch (err) {
+        toast(err.message);
+      }
+    }
+
+    function renderOrders(orders) {
+      const box = $("orders");
+      box.innerHTML = "";
+      $("empty").style.display = orders.length ? "none" : "block";
+
+      orders.forEach(o => {
+        let items = [];
+        try { items = JSON.parse(o.items_json); } catch {}
+
+        const itemsHtml = items.map(i =>
+          `<li>${escapeHtml(i.name)} × ${i.quantity} — ${i.line_total.toFixed(2)} ₽</li>`
+        ).join("");
+
+        const date = new Date(o.created_at).toLocaleString("ru-RU");
+        const canCancel = ["pending", "confirmed"].includes(o.status);
+
+        const el = document.createElement("div");
+        el.className = "order";
+        el.innerHTML = `
+          <div class="order-head">
+            <span class="order-id">Заказ #${o.id}</span>
+            <span class="badge ${o.status}">${STATUS_RU[o.status] || o.status}</span>
+          </div>
+          <ul class="order-items">${itemsHtml}</ul>
+          <div style="font-size:13px;color:#6b7280">
+            Адрес: ${escapeHtml(o.delivery_address)}<br>
+            ${o.comment ? "Комментарий: " + escapeHtml(o.comment) + "<br>" : ""}
+            Создан: ${date}
+          </div>
+          <div class="order-foot">
+            <span class="order-total">${o.total_price.toFixed(2)} ₽</span>
+            ${canCancel ? `<button class="danger" data-id="${o.id}">Отменить</button>` : ""}
+          </div>
+        `;
+
+        const cancelBtn = el.querySelector("button.danger");
+        if (cancelBtn) {
+          cancelBtn.addEventListener("click", async () => {
+            if (!confirm(`Отменить заказ #${o.id}?`)) return;
+            try {
+              await api(`/orders/${o.id}/cancel`, { method: "PATCH" });
+              toast("Заказ отменён");
+              loadOrders();
+            } catch (err) {
+              toast(err.message);
+            }
+          });
+        }
+
+        box.appendChild(el);
+      });
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>

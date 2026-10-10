@@ -4,6 +4,9 @@ from database import Base, engine, SessionLocal
 from models import User, Product
 from auth import hash_password
 from routers import users, products, orders
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 
 Base.metadata.create_all(bind=engine)
@@ -25,6 +28,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(products.router)
 app.include_router(orders.router)
+
 
 
 @app.on_event("startup")
@@ -62,10 +66,11 @@ def seed_data():
         db.close()
 
 
-@app.get("/", tags=["Root"])
+@app.get("/", include_in_schema=False)
 def root():
-    return {
-        "message": "Dark Store API работает",
-        "docs": "/docs",
-        "admin": {"username": "admin", "password": "admin123"},
-    }
+    index = os.path.join("static", "index.html")
+    if os.path.isfile(index):
+        return FileResponse(index)
+    return {"message": "Dark Store API работает", "docs": "/docs"}
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

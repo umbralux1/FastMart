@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Каталог — Dark Store</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <div class="container">
+    <div class="filters">
+      <input type="text" id="search" placeholder="Поиск товара...">
+      <select id="category">
+        <option value="">Все категории</option>
+      </select>
+      <button class="secondary" id="refresh">Обновить</button>
+    </div>
+
+    <div id="products" class="products"></div>
+    <div id="empty" class="empty" style="display:none">Товары не найдены</div>
+  </div>
+
+  <!-- Корзина -->
+  <div class="cart" id="cart" style="display:none">
+    <h3>Корзина</h3>
+    <div id="cart-items"></div>
+    <div class="cart-total" id="cart-total"></div>
+    <button class="checkout" id="checkout">Оформить заказ</button>
+    <button class="secondary checkout" id="clear-cart" style="margin-top:8px">Очистить</button>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let allProducts = [];
+
+    // ---------- Загрузка каталога ----------
+    async function loadProducts() {
+      const search = $("search").value.trim();
+      const category = $("category").value;
+
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (category) params.append("category", category);
+
+      try {
+        allProducts = await api("/products/?" + params.toString());
+        renderProducts();
+      } catch (err) {
+        toast(err.message);
+      }
+    }
+
+    async function loadCategories() {
+      try {
+        const products = await api("/products/?only_available=false");
+        const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
+        const select = $("category");
+        cats.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          select.appendChild(opt);
+        });
+      } catch {}
+    }
+
+    function renderProducts() {
+      const box = $("products");
+      box.innerHTML = "";
+      $("empty").style.display = allProducts.length ? "none" : "block";
+
+      allProducts.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="cat">${p.category || ""}</div>
+          <h3>${escapeHtml(p.name)}</h3>
+          <div class="desc">${escapeHtml(p.description || "")}</div>
+          <div class="stock ${p.stock > 0 ? "" : "out"}">
+            ${p.stock > 0 ? `В наличии: ${p.stock}` : "Нет в наличии"}
+          </div>
+          <div class="price">${p.price.toFixed(2)} ₽</div>
+          <button ${p.stock <= 0 ? "disabled" : ""}>В корзину</button>
+        `;
+        const btn = card.querySelector("button");
+        if (p.stock > 0) {
+          btn.addEventListener("click", () => {
+            cart.add(p);
+            renderCart();
+            toast(`${p.name} добавлен`);
+          });
+        }
+        box.appendChild(card);
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      })[c]);
+    }
+
+    // ---------- Корзина ----------
+    function renderCart() {
+      const items = cart.get();
+      const box = $("cart");
+      const list = $("cart-items");
+
+      if (!items.length) {
+        box.style.display = "none";
+        return;
+      }
+      box.style.display = "block";
+      list.innerHTML = "";
+
+      items.forEach(i => {
+        const row = document.createElement("div");
+        row.className = "cart-item";
+        row.innerHTML = `
+          <span>${escapeHtml(i.name)}</span>
+          <div class="qty">
+            <button data-act="dec" data-id="${i.id}">−</button>
+            <span>${i.qty}</span>
+            <button data-act="inc" data-id="${i.id}">+</button>
+          </div>
+          <span>${(i.price * i.qty).toFixed(2)} ₽</span>
+        `;
+        list.appendChild(row);
+      });
+
+      $("cart-total").textContent = `Итого: ${cart.total().toFixed(2)} ₽`;
+
+      list.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = +btn.dataset.id;
+          const items = cart.get();
+          const item = items.find(i => i.id === id);
+          if (!item) return;
+          const delta = btn.dataset.act === "inc" ? 1 : -1;
+          cart.setQty(id, item.qty + delta);
+          renderCart();
+        });
+      });
+    }
+
+    $("clear-cart").addEventListener("click", () => {
+      if (confirm("Очистить корзину?")) {
+        cart.clear();
+        renderCart();
+      }
+    });
+
+    // ---------- Оформление заказа ----------
+    $("checkout").addEventListener("click", async () => {
+      if (!auth.isLoggedIn()) {
+        toast("Сначала войдите в аккаунт");
+        setTimeout(() => location.href = "/login.html", 800);
+        return;
+      }
+
+      const address = prompt("Адрес доставки:", "");
+      if (!address) return;
+
+      const comment = prompt("Комментарий к заказу (необязательно):", "") || null;
+
+      const items = cart.get().map(i => ({ product_id: i.id, quantity: i.qty }));
+
+      try {
+        await api("/orders/", {
+          method: "POST",
+          body: JSON.stringify({
+            items,
+            delivery_address: address,
+            comment,
+          }),
+        });
+        cart.clear();
+        renderCart();
+        toast("Заказ оформлен!");
+        setTimeout(() => location.href = "/orders.html", 800);
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+
+    // ---------- Фильтры ----------
+    let t;
+    $("search").addEventListener("input", () => {
+      clearTimeout(t);
+      t = setTimeout(loadProducts, 300);
+    });
+    $("category").addEventListener("change", loadProducts);
+    $("refresh").addEventListener("click", loadProducts);
+
+    // ---------- Старт ----------
+    loadCategories();
+    loadProducts();
+    renderCart();
+  </script>
+</body>
+</html>
