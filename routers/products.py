@@ -10,6 +10,8 @@ from crud import create_product, update_product
 router = APIRouter(prefix="/products", tags=["Товары"])
 
 
+
+
 @router.get("/", response_model=List[ProductOut])
 def list_products(
     category: Optional[str] = None,
@@ -20,13 +22,21 @@ def list_products(
     db: Session = Depends(get_db),
 ):
     query = db.query(Product)
+
     if category:
         query = query.filter(Product.category == category)
-    if search:
-        query = query.filter(Product.name.ilike(f"%{search}%"))
+
     if only_available:
         query = query.filter(Product.is_available == True)
-    return query.offset(skip).limit(limit).all()
+
+    products = query.all()
+
+    # Поиск делаем в Python — учитывает регистр кириллицы
+    if search:
+        needle = search.strip().lower()
+        products = [p for p in products if needle in p.name.lower()]
+
+    return products[skip:skip + limit]
 
 
 @router.get("/{product_id}", response_model=ProductOut)
