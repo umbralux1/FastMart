@@ -1,0 +1,101 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ===== Virtual environments =====
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+.python-version
+
+# ===== PyCharm / IDE =====
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===== FastAPI / Uvicorn =====
+*.log
+uvicorn.log
+
+# ===== База данных SQLite =====
+*.db
+*.sqlite
+*.sqlite3
+dark_store.db
+dark_store.db-journal
+
+# ===== Файлы окружения (.env) =====
+.env
+.env.local
+.env.*.local
+*.env
+
+# ===== Секреты и ключи =====
+*.pem
+*.key
+secrets.json
+
+# ===== Тесты и покрытие =====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# ===== Jupyter =====
+.ipynb_checkpoints/
+
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== Windows =====
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ===== Linux =====
+*~
+.directory
+.Trash-*
+
+# ===== Временные файлы =====
+*.bak
+*.tmp
+*.temp
+.cache/
