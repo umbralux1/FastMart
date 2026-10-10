@@ -38,7 +38,7 @@ def seed_data():
     try:
         if not db.query(User).filter(User.username == "admin").first():
             admin = User(
-                email="admin@darkstore.local",
+                email="admin@example.com",
                 username="admin",
                 hashed_password=hash_password("admin123"),
                 full_name="Администратор",
@@ -72,5 +72,11 @@ def root():
     if os.path.isfile(index):
         return FileResponse(index)
     return {"message": "Dark Store API работает", "docs": "/docs"}
+
+
+@app.get("/admin", include_in_schema=False)
+def admin_page():
+    return FileResponse("static/admin.html")
+
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

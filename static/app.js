@@ -78,17 +78,27 @@ const cart = {
 };
 
 // ---------- Хедер с навигацией ----------
-function renderHeader() {
+async function renderHeader() {
   const el = document.getElementById("header");
   if (!el) return;
 
   const loggedIn = auth.isLoggedIn();
+  let isAdmin = false;
+
+  if (loggedIn) {
+    try {
+      const me = await api("/users/me");
+      isAdmin = me.is_admin;
+    } catch {}
+  }
+
   el.innerHTML = `
     <h1>🛒 Dark Store</h1>
     <nav>
       <a href="/">Каталог</a>
       ${loggedIn
         ? `<a href="/orders.html">Мои заказы</a>
+           ${isAdmin ? `<a href="/admin.html">Админка</a>` : ""}
            <a href="#" id="logout">Выйти</a>`
         : `<a href="/login.html">Войти</a>`}
     </nav>

@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 from database import get_db
 from schemas import UserCreate, UserOut, Token, UserUpdate
 from models import User
-from auth import verify_password, create_access_token, get_current_user
+from auth import verify_password, create_access_token, get_current_user, get_current_admin
 from crud import create_user
+from typing import List
 
 router = APIRouter(prefix="/users", tags=["Пользователи"])
 
@@ -40,3 +41,25 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+
+@router.get("/admin/all", response_model=List[UserOut])
+def all_users(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    return db.query(User).order_by(User.created_at.desc()).all()
+
+@router.patch("/admin/{user_id}/make-admin", response_model=UserOut)
+def make_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user.is_admin = True
+    db.commit()
+    db.refresh(user)
+    return user

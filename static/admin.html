@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Админка — Dark Store</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .tabs button {
+      background: none;
+      color: #6b7280;
+      border-radius: 8px 8px 0 0;
+      padding: 12px 20px;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tabs button.active {
+      color: #16a34a;
+      border-bottom-color: #16a34a;
+    }
+    .tabs button:hover { background: #f9fafb; }
+
+    table {
+      width: 100%;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 14px;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: #fafafa; }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+    }
+    .actions button {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    .row-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .row-title h2 { font-size: 20px; }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      width: 480px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h3 { margin-bottom: 16px; }
+    .modal label {
+      display: block;
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .modal input, .modal textarea, .modal select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .modal .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .status-select {
+      padding: 6px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header id="header"></header>
+
+  <div class="container">
+    <div id="no-access" class="empty" style="display:none">
+      ⛔ Доступ только для администраторов<br><br>
+      <a href="/" style="color:#16a34a; font-weight:600;">← На главную</a>
+    </div>
+
+    <div id="admin-panel" style="display:none">
+      <div class="tabs">
+        <button data-tab="products" class="active">📦 Товары</button>
+        <button data-tab="orders">🧾 Заказы</button>
+        <button data-tab="users">👥 Пользователи</button>
+      </div>
+
+      <div id="tab-products" class="tab-content">
+        <div class="row-title">
+          <h2>Товары</h2>
+          <button id="add-product">+ Добавить товар</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Название</th>
+              <th>Категория</th>
+              <th>Цена</th>
+              <th>Склад</th>
+              <th>Статус</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </div>
+
+      <div id="tab-orders" class="tab-content" style="display:none">
+        <div class="row-title">
+          <h2>Заказы</h2>
+          <button class="secondary" id="refresh-orders">Обновить</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Пользователь</th>
+              <th>Сумма</th>
+              <th>Адрес</th>
+              <th>Статус</th>
+              <th>Дата</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+
+      <div id="tab-users" class="tab-content" style="display:none">
+        <div class="row-title">
+          <h2>Пользователи</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>ФИО</th>
+              <th>Роль</th>
+              <th>Создан</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      })[c]);
+    }
+
+    const STATUS_RU = {
+      pending:    "Ожидает",
+      confirmed:  "Подтверждён",
+      delivering: "В доставке",
+      delivered:  "Доставлен",
+      cancelled:  "Отменён",
+    };
+    const STATUSES = Object.keys(STATUS_RU);
+
+    // ---------- Проверка доступа ----------
+    async function checkAccess() {
+      if (!auth.isLoggedIn()) {
+        location.href = "/login.html";
+        return false;
+      }
+      try {
+        const me = await api("/users/me");
+        if (!me.is_admin) {
+          $("no-access").style.display = "block";
+          return false;
+        }
+        $("admin-panel").style.display = "block";
+        return true;
+      } catch {
+        location.href = "/login.html";
+        return false;
+      }
+    }
+
+    // ---------- Табы ----------
+    document.querySelectorAll(".tabs button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
+        btn.classList.add("active");
+        $("tab-" + btn.dataset.tab).style.display = "block";
+
+        if (btn.dataset.tab === "products") loadProducts();
+        if (btn.dataset.tab === "orders")   loadOrders();
+        if (btn.dataset.tab === "users")    loadUsers();
+      });
+    });
+
+    // ================== ТОВАРЫ ==================
+    let productsCache = [];
+
+    async function loadProducts() {
+      try {
+        productsCache = await api("/products/?only_available=false&limit=1000");
+        renderProducts();
+      } catch (err) { toast(err.message); }
+    }
+
+    function renderProducts() {
+      const body = $("products-body");
+      body.innerHTML = "";
+
+      if (!productsCache.length) {
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6b7280">Товаров нет</td></tr>`;
+        return;
+      }
+
+      productsCache.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.id}</td>
+          <td>${escapeHtml(p.name)}</td>
+          <td>${escapeHtml(p.category || "—")}</td>
+          <td>${p.price.toFixed(2)} ₽</td>
+          <td>${p.stock}</td>
+          <td>
+            <span class="badge ${p.is_available ? "delivered" : "cancelled"}">
+              ${p.is_available ? "Активен" : "Скрыт"}
+            </span>
+          </td>
+          <td>
+            <div class="actions">
+              <button class="secondary" data-act="edit" data-id="${p.id}">✏️</button>
+              <button class="danger" data-act="del" data-id="${p.id}">🗑</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+
+      body.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = +btn.dataset.id;
+          if (btn.dataset.act === "edit") openProductModal(productsCache.find(p => p.id === id));
+          if (btn.dataset.act === "del")  deleteProduct(id);
+        });
+      });
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm("Удалить товар?")) return;
+      try {
+        await api(`/products/${id}`, { method: "DELETE" });
+        toast("Товар удалён");
+        loadProducts();
+      } catch (err) { toast(err.message); }
+    }
+
+    // ---------- Модалка товара ----------
+    function openProductModal(product = null) {
+      const isEdit = !!product;
+      const p = product || { name: "", description: "", price: 0, category: "", stock: 0, is_available: true };
+
+      const bg = document.createElement("div");
+      bg.className = "modal-bg";
+      bg.innerHTML = `
+        <div class="modal">
+          <h3>${isEdit ? "Редактировать товар" : "Новый товар"}</h3>
+          <label>Название *</label>
+          <input id="m-name" value="${escapeHtml(p.name)}">
+          <label>Описание</label>
+          <textarea id="m-desc" rows="2">${escapeHtml(p.description || "")}</textarea>
+          <div class="row-2">
+            <div>
+              <label>Цена (₽) *</label>
+              <input id="m-price" type="number" step="0.01" min="0" value="${p.price}">
+            </div>
+            <div>
+              <label>Склад</label>
+              <input id="m-stock" type="number" min="0" value="${p.stock}">
+            </div>
+          </div>
+          <label>Категория</label>
+          <input id="m-cat" value="${escapeHtml(p.category || "")}">
+          <label style="display:flex;align-items:center;gap:8px;margin-top:8px">
+            <input type="checkbox" id="m-avail" ${p.is_available ? "checked" : ""} style="width:auto;margin:0">
+            Доступен для заказа
+          </label>
+          <div class="modal-actions">
+            <button class="secondary" id="m-cancel">Отмена</button>
+            <button id="m-save">${isEdit ? "Сохранить" : "Создать"}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(bg);
+
+      bg.querySelector("#m-cancel").addEventListener("click", () => bg.remove());
+      bg.addEventListener("click", (e) => { if (e.target === bg) bg.remove(); });
+
+      bg.querySelector("#m-save").addEventListener("click", async () => {
+        const data = {
+          name:        bg.querySelector("#m-name").value.trim(),
+          description: bg.querySelector("#m-desc").value.trim() || null,
+          price:       parseFloat(bg.querySelector("#m-price").value),
+          stock:       parseInt(bg.querySelector("#m-stock").value, 10) || 0,
+          category:    bg.querySelector("#m-cat").value.trim() || null,
+          is_available: bg.querySelector("#m-avail").checked,
+        };
+        if (!data.name) return toast("Введите название");
+        if (!(data.price > 0)) return toast("Цена должна быть > 0");
+
+        try {
+          if (isEdit) {
+            await api(`/products/${product.id}`, { method: "PATCH", body: JSON.stringify(data) });
+            toast("Товар обновлён");
+          } else {
+            await api("/products/", { method: "POST", body: JSON.stringify(data) });
+            toast("Товар создан");
+          }
+          bg.remove();
+          loadProducts();
+        } catch (err) { toast(err.message); }
+      });
+    }
+
+    $("add-product").addEventListener("click", () => openProductModal());
+
+    // ================== ЗАКАЗЫ ==================
+    async function loadOrders() {
+      try {
+        const orders = await api("/orders/admin/all");
+        renderOrders(orders);
+      } catch (err) { toast(err.message); }
+    }
+
+    function renderOrders(orders) {
+      const body = $("orders-body");
+      body.innerHTML = "";
+
+      if (!orders.length) {
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6b7280">Заказов нет</td></tr>`;
+        return;
+      }
+
+      orders.forEach(o => {
+        const date = new Date(o.created_at).toLocaleString("ru-RU");
+        const options = STATUSES.map(s =>
+          `<option value="${s}" ${s === o.status ? "selected" : ""}>${STATUS_RU[s]}</option>`
+        ).join("");
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>#${o.id}</td>
+          <td>user #${o.user_id}</td>
+          <td>${o.total_price.toFixed(2)} ₽</td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ${escapeHtml(o.delivery_address)}
+          </td>
+          <td>
+            <select class="status-select" data-id="${o.id}">${options}</select>
+          </td>
+          <td>${date}</td>
+          <td><button class="secondary" data-act="view" data-id="${o.id}">👁</button></td>
+        `;
+        body.appendChild(tr);
+
+        tr.querySelector("select").addEventListener("change", async (e) => {
+          const status = e.target.value;
+          try {
+            await api(`/orders/admin/${o.id}/status`, {
+              method: "PATCH",
+              body: JSON.stringify({ status }),
+            });
+            toast(`Статус #${o.id} → ${STATUS_RU[status]}`);
+          } catch (err) {
+            toast(err.message);
+            e.target.value = o.status; // откат
+          }
+        });
+
+        tr.querySelector("button[data-act=view]").addEventListener("click", () => viewOrder(o));
+      });
+    }
+
+    function viewOrder(o) {
+      let items = [];
+      try { items = JSON.parse(o.items_json); } catch {}
+      const list = items.map(i =>
+        `<li>${escapeHtml(i.name)} × ${i.quantity} — ${i.line_total.toFixed(2)} ₽</li>`
+      ).join("");
+
+      const bg = document.createElement("div");
+      bg.className = "modal-bg";
+      bg.innerHTML = `
+        <div class="modal">
+          <h3>Заказ #${o.id}</h3>
+          <p style="margin-bottom:10px"><b>Статус:</b>
+            <span class="badge ${o.status}">${STATUS_RU[o.status]}</span>
+          </p>
+          <p style="margin-bottom:10px"><b>Адрес:</b> ${escapeHtml(o.delivery_address)}</p>
+          ${o.comment ? `<p style="margin-bottom:10px"><b>Комментарий:</b> ${escapeHtml(o.comment)}</p>` : ""}
+          <p style="margin-bottom:6px"><b>Состав:</b></p>
+          <ul style="margin-left:20px;margin-bottom:12px">${list}</ul>
+          <p style="font-size:18px;font-weight:700;text-align:right">Итого: ${o.total_price.toFixed(2)} ₽</p>
+          <div class="modal-actions">
+            <button class="secondary" id="close">Закрыть</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(bg);
+      bg.querySelector("#close").addEventListener("click", () => bg.remove());
+      bg.addEventListener("click", (e) => { if (e.target === bg) bg.remove(); });
+    }
+
+    $("refresh-orders").addEventListener("click", loadOrders);
+
+    // ================== ПОЛЬЗОВАТЕЛИ ==================
+    async function loadUsers() {
+      try {
+        const users = await api("/users/admin/all");
+        renderUsers(users);
+      } catch (err) { toast(err.message); }
+    }
+
+    function renderUsers(users) {
+      const body = $("users-body");
+      body.innerHTML = "";
+
+      if (!users.length) {
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6b7280">Пусто</td></tr>`;
+        return;
+      }
+
+      users.forEach(u => {
+        const date = new Date(u.created_at).toLocaleDateString("ru-RU");
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.id}</td>
+          <td>${escapeHtml(u.username)}</td>
+          <td>${escapeHtml(u.email)}</td>
+          <td>${escapeHtml(u.full_name || "—")}</td>
+          <td>
+            <span class="badge ${u.is_admin ? "delivered" : "pending"}">
+              ${u.is_admin ? "Админ" : "Юзер"}
+            </span>
+          </td>
+          <td>${date}</td>
+          <td>
+            ${u.is_admin ? "" : `<button class="secondary" data-act="promote" data-id="${u.id}">Сделать админом</button>`}
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+
+      body.querySelectorAll("button[data-act=promote]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Сделать пользователя администратором?")) return;
+          try {
+            await api(`/users/admin/${btn.dataset.id}/make-admin`, { method: "PATCH" });
+            toast("Готово");
+            loadUsers();
+          } catch (err) { toast(err.message); }
+        });
+      });
+    }
+
+    // ================== СТАРТ ==================
+    (async () => {
+      const ok = await checkAccess();
+      if (ok) loadProducts();
+    })();
+  </script>
+</body>
+</html>
