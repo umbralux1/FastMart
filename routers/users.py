@@ -50,6 +50,7 @@ def all_users(
 ):
     return db.query(User).order_by(User.created_at.desc()).all()
 
+
 @router.patch("/admin/{user_id}/make-admin", response_model=UserOut)
 def make_admin(
     user_id: int,

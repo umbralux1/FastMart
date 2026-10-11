@@ -93,7 +93,7 @@ async function renderHeader() {
   }
 
   el.innerHTML = `
-    <h1>🛒 Dark Store</h1>
+  <a href="/" class="logo"><h1>🛒 FastMart</h1></a>
     <nav>
       <a href="/">Каталог</a>
       ${loggedIn

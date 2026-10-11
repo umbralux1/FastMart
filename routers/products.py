@@ -10,8 +10,6 @@ from crud import create_product, update_product
 router = APIRouter(prefix="/products", tags=["Товары"])
 
 
-
-
 @router.get("/", response_model=List[ProductOut])
 def list_products(
     category: Optional[str] = None,

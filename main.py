@@ -9,11 +9,12 @@ from fastapi.responses import FileResponse
 import os
 
 
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Dark Store API",
-    description="Каталог продуктов и заказы для dark store",
+    title="FastMart API",
+    description="Каталог продуктов и заказы для FastMart",
     version="1.0.0",
 )
 
@@ -71,7 +72,7 @@ def root():
     index = os.path.join("static", "index.html")
     if os.path.isfile(index):
         return FileResponse(index)
-    return {"message": "Dark Store API работает", "docs": "/docs"}
+    return {"message": "FastMart API работает", "docs": "/docs"}
 
 
 @app.get("/admin", include_in_schema=False)
