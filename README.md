@@ -1,0 +1,383 @@
+# 🛒 FastMart
+
+Интернет-магазин продуктов в формате **dark store** — быстрый заказ, доставка за 15 минут.
+
+Полноценное full-stack приложение: **FastAPI** на бэкенде, **чистый HTML/CSS/JS** на фронтенде, **SQLite** (или PostgreSQL) для хранения данных.
+
+---
+
+## 📋 Содержание
+
+- [Возможности](#-возможности)
+- [Стек технологий](#-стек-технологий)
+- [Быстрый старт](#-быстрый-старт)
+- [Структура проекта](#-структура-проекта)
+- [API](#-api)
+- [Фронтенд](#-фронтенд)
+- [Админ-панель](#-админ-панель)
+- [Переменные окружения](#-переменные-окружения)
+- [Деплой на Render](#-деплой-на-render)
+- [Безопасность](#-безопасность)
+- [Планы развития](#-планы-развития)
+
+---
+
+## ✨ Возможности
+
+### Для покупателя
+
+- 🔐 Регистрация и вход по JWT
+- 🛍 Просмотр каталога с фильтрами (поиск, категория)
+- 🛒 Корзина (сохраняется в браузере)
+- 📦 Оформление заказа с адресом и комментарием
+- 📜 История заказов с отслеживанием статуса
+- ❌ Отмена заказа до начала доставки
+
+### Для администратора
+
+- 📦 CRUD товаров (создание, редактирование, удаление, скрытие)
+- 🧾 Просмотр всех заказов всех пользователей
+- 🔄 Смена статуса заказа (`pending → confirmed → delivering → delivered / cancelled`)
+- 👥 Список пользователей, повышение до админа
+
+### Технически
+
+- 🔑 JWT-авторизация (`python-jose`)
+- 🔒 Хеширование паролей (bcrypt через passlib)
+- 🌐 CORS настроен
+- 📘 Автогенерируемая документация Swagger (`/docs`)
+- 💅 Адаптивная вёрстка без фреймворков
+- 🗄 Миграция SQLite → PostgreSQL одной переменной окружения
+
+---
+
+## 🧰 Стек технологий
+
+### Бэкенд
+
+| Технология | Версия | Назначение |
+|---|---|---|
+| [FastAPI](https://fastapi.tiangolo.com/) | 0.109.0 | Web-фреймворк |
+| [Uvicorn](https://www.uvicorn.org/) | 0.27.0 | ASGI-сервер |
+| [SQLAlchemy](https://www.sqlalchemy.org/) | 2.0.25 | ORM |
+| [Pydantic](https://docs.pydantic.dev/) | 2.5.3 | Валидация данных |
+| [python-jose](https://github.com/mpdavis/python-jose) | 3.3.0 | JWT-токены |
+| [passlib](https://passlib.readthedocs.io/) + [bcrypt](https://github.com/pyca/bcrypt) | 1.7.4 / 4.0.1 | Хеширование паролей |
+
+### Фронтенд
+
+- Чистый **HTML5**
+- **CSS3** (без препроцессоров)
+- **Vanilla JS** (ES2020+)
+- Никаких сборщиков, npm, React/Vue
+
+### База данных
+
+- **SQLite** по умолчанию (для разработки)
+- **PostgreSQL** опционально (для продакшена)
+
+---
+
+## 🚀 Быстрый старт
+
+### 1. Клонирование
+
+```bash
+git clone https://github.com/umbralux1/FastMart.git
+cd FastMart
+```
+
+### 2. Виртуальное окружение
+
+```bash
+python -m venv venv
+
+# macOS / Linux
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+```
+
+### 3. Установка зависимостей
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Запуск
+
+```bash
+uvicorn main:app --reload
+```
+
+Откройте:
+
+| URL | Что там |
+|---|---|
+| http://127.0.0.1:8000/ | 🛒 Каталог |
+| http://127.0.0.1:8000/login.html | 🔐 Вход / регистрация |
+| http://127.0.0.1:8000/orders.html | 📦 Мои заказы |
+| http://127.0.0.1:8000/admin.html | ⚙️ Админка |
+| http://127.0.0.1:8000/docs | 📘 Swagger UI |
+
+### 5. Вход админа
+
+При первом запуске создаётся администратор:
+
+```
+username: admin
+password: admin123
+email:    admin@example.com
+```
+
+> ⚠️ **Смените пароль в продакшене!**
+
+---
+
+## 📁 Структура проекта
+
+```
+FastMart/
+├── main.py                  # Точка входа FastAPI
+├── database.py              # Подключение к БД
+├── models.py                # SQLAlchemy-модели
+├── schemas.py               # Pydantic-схемы
+├── crud.py                  # Бизнес-логика
+├── auth.py                  # JWT + bcrypt
+├── config.py                # Настройки приложения
+├── requirements.txt
+├── render.yaml              # Конфиг для Render
+├── .gitignore
+├── .env.example
+├── README.md
+├── routers/
+│   ├── __init__.py
+│   ├── users.py             # /users/*  — регистрация, логин, профиль
+│   ├── products.py          # /products/* — CRUD товаров
+│   └── orders.py            # /orders/* — заказы
+└── static/
+    ├── index.html           # Каталог + корзина
+    ├── login.html           # Вход / регистрация
+    ├── orders.html          # Мои заказы
+    ├── admin.html           # Админка
+    ├── style.css
+    └── app.js               # Общая логика: API, auth, корзина, хедер
+```
+
+---
+
+## 📡 API
+
+Полная интерактивная документация — на `/docs` (Swagger UI).
+
+### Пользователи (`/users`)
+
+| Метод | Путь | Доступ | Описание |
+|---|---|---|---|
+| `POST` | `/users/register` | все | Регистрация |
+| `POST` | `/users/login` | все | Логин (form-data), возвращает JWT |
+| `GET` | `/users/me` | авторизован | Текущий пользователь |
+| `PATCH` | `/users/me` | авторизован | Обновить профиль |
+| `GET` | `/users/admin/all` | админ | Все пользователи |
+| `PATCH` | `/users/admin/{id}/make-admin` | админ | Повысить до админа |
+
+### Товары (`/products`)
+
+| Метод | Путь | Доступ | Описание |
+|---|---|---|---|
+| `GET` | `/products/` | все | Список с фильтрами `search`, `category`, `only_available` |
+| `GET` | `/products/{id}` | все | Один товар |
+| `POST` | `/products/` | админ | Создать |
+| `PATCH` | `/products/{id}` | админ | Обновить |
+| `DELETE` | `/products/{id}` | админ | Удалить |
+
+### Заказы (`/orders`)
+
+| Метод | Путь | Доступ | Описание |
+|---|---|---|---|
+| `POST` | `/orders/` | авторизован | Создать заказ |
+| `GET` | `/orders/my` | авторизован | Мои заказы |
+| `GET` | `/orders/{id}` | автор / админ | Один заказ |
+| `PATCH` | `/orders/{id}/cancel` | автор / админ | Отменить |
+| `GET` | `/orders/admin/all` | админ | Все заказы |
+| `PATCH` | `/orders/admin/{id}/status` | админ | Сменить статус |
+
+### Пример: логин + запрос
+
+```bash
+# 1. Логин
+curl -X POST http://127.0.0.1:8000/users/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin&password=admin123"
+# → {"access_token":"eyJ...","token_type":"bearer"}
+
+# 2. Запрос с токеном
+curl http://127.0.0.1:8000/users/me \
+  -H "Authorization: Bearer eyJ..."
+```
+
+### Пример: создание заказа
+
+```bash
+curl -X POST http://127.0.0.1:8000/orders/ \
+  -H "Authorization: Bearer eyJ..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {"product_id": 1, "quantity": 2},
+      {"product_id": 3, "quantity": 1}
+    ],
+    "delivery_address": "ул. Пушкина, 10, кв. 5",
+    "comment": "Позвонить за 10 минут"
+  }'
+```
+
+---
+
+## 🎨 Фронтенд
+
+Обычные HTML-файлы, отдаваемые через `StaticFiles`. Никакого сборщика.
+
+### Как работает авторизация
+
+1. Пользователь вводит логин/пароль на `/login.html`.
+2. `POST /users/login` возвращает JWT.
+3. Токен кладётся в `localStorage` под ключом `token`.
+4. Каждый запрос через `api()` в `app.js` добавляет заголовок `Authorization: Bearer <token>`.
+5. При `401` токен удаляется, редирект на `/login.html`.
+
+### Как работает корзина
+
+Корзина живёт **только в браузере**, в `localStorage` под ключом `cart`:
+
+```json
+[
+  {"id": 1, "name": "Молоко 3.2%", "price": 89.9, "qty": 2},
+  {"id": 4, "name": "Бананы", "price": 99.0, "qty": 1}
+]
+```
+
+Сервер о корзине **не знает** до момента оформления заказа. Если пользователь зайдёт с другого устройства — корзина будет пустой.
+
+### Toast-уведомления
+
+Все успехи и ошибки показываются всплывашкой через `toast(message)` в `app.js`.
+
+---
+
+## ⚙️ Админ-панель
+
+Доступна на `/admin.html` только пользователям с `is_admin=true`.
+
+Три вкладки:
+
+- **📦 Товары** — таблица со всеми товарами (включая скрытые), модалка для создания/редактирования.
+- **🧾 Заказы** — все заказы, смена статуса через выпадающий список, просмотр состава.
+- **👥 Пользователи** — список, повышение до админа.
+
+Если заходите не под админом — увидите сообщение «⛔ Доступ только для администраторов».
+
+---
+
+## 🔧 Переменные окружения
+
+Создайте `.env` в корне (не коммитится):
+
+```env
+SECRET_KEY=ваш-секретный-ключ-минимум-32-символа
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+DATABASE_URL=sqlite:///./dark_store.db
+```
+
+Сгенерировать `SECRET_KEY`:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
+```
+
+Шаблон лежит в `.env.example` — его **можно** коммитить.
+
+---
+
+## ☁️ Деплой на Render
+
+### Вариант 1: через `render.yaml` (рекомендуется)
+
+В проекте есть `render.yaml`:
+
+```yaml
+services:
+  - type: web
+    name: fastmart
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+```
+
+1. Зайдите на [render.com](https://render.com) → **New +** → **Web Service**.
+2. Подключите GitHub-репозиторий.
+3. Render сам подтянет настройки из `render.yaml`.
+4. **Create Web Service**.
+
+### Вариант 2: вручную
+
+При создании Web Service укажите:
+
+- **Runtime:** Python 3
+- **Build Command:** `pip install -r requirements.txt`
+- **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+⚠️ **`$PORT` обязателен.** Без него сервис не запустится.
+
+### ⚠️ Про SQLite на Render
+
+Файловая система Render **эфемерная**: `dark_store.db` удаляется при каждом деплое и рестарте. Для сохранения данных подключите **PostgreSQL**:
+
+1. На Render: **New +** → **Postgres** → Free.
+2. Скопируйте **Internal Database URL**.
+3. В Web Service → **Environment** → добавьте `DATABASE_URL`.
+4. В `database.py` уже есть автоопределение — код сам подхватит Postgres.
+
+---
+
+## 🔒 Безопасность
+
+### Что уже сделано
+
+- ✅ Пароли хешируются через bcrypt
+- ✅ JWT-токены с `exp` (срок жизни 24 часа по умолчанию)
+- ✅ HTML экранируется при выводе (`escapeHtml`)
+- ✅ CORS настроен (для продакшена сузьте `allow_origins`)
+- ✅ Проверка прав на каждом эндпоинте (`get_current_user` / `get_current_admin`)
+
+### Что стоит улучшить для продакшена
+
+- ⚠️ **JWT в `localStorage`** уязвим к XSS. Для серьёзных проектов — перенести в `HttpOnly` cookie + `SameSite=Strict` + CSRF-токен.
+- ⚠️ **`SECRET_KEY`** сейчас в коде. Вынесите в `.env` и **никогда** не коммитьте.
+- ⚠️ **CORS `allow_origins=["*"]`** — только для разработки. В продакшене укажите конкретный домен.
+- ⚠️ **Rate limiting** на `/users/login` — защита от брутфорса.
+- ⚠️ **HTTPS** — Render даёт из коробки, но убедитесь, что редирект с HTTP работает.
+- ⚠️ **SQLite → PostgreSQL** — для реальной нагрузки и сохранности данных.
+
+---
+
+## 🗺 Планы развития
+
+- [ ] Серверная корзина с синхронизацией между устройствами
+- [ ] Отдельная таблица `order_items` вместо `items_json`
+- [ ] Загрузка изображений товаров (`image_url` уже есть в модели)
+- [ ] Категории в отдельной таблице
+- [ ] Промокоды и скидки
+- [ ] Дашборд со статистикой (выручка, топ-товары)
+- [ ] Миграции через Alembic
+- [ ] Тесты (pytest + httpx)
+- [ ] Docker + docker-compose
+- [ ] Экспорт заказов в CSV
+- [ ] Уведомления (email / Telegram) о смене статуса
+
+---
