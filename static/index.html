@@ -2,202 +2,341 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Каталог — FastMart </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastMart — доставка за 15 минут</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <header id="header"></header>
 
-  <div class="container">
-    <div class="filters">
-      <input type="text" id="search" placeholder="Поиск товара...">
-      <select id="category">
-        <option value="">Все категории</option>
-      </select>
-      <button class="secondary" id="refresh">Обновить</button>
-    </div>
+  <div class="page-shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">Доставка за 15 минут</span>
+        <h1>Свежие продукты и быстрый заказ без лишних шагов.</h1>
+        <p>Найдите любимые товары, добавьте в корзину и оформите заказ одним кликом — всё, что нужно, уже рядом.</p>
+
+        <div class="hero-actions">
+          <button type="button" id="hero-order">К товарам</button>
+          <button type="button" class="secondary" id="hero-login">Войти</button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <strong>1200+</strong>
+            <span>товаров</span>
+          </div>
+          <div class="hero-stat">
+            <strong>15 мин</strong>
+            <span>доставка</span>
+          </div>
+          <div class="hero-stat">
+            <strong>4.9/5</strong>
+            <span>клиентов</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-panel">
+        <div class="mini-card">
+          <h3>Товар дня</h3>
+          <div class="price">569 ₽</div>
+          <div class="meta">Набор свежих продуктов</div>
+          <div class="tags">
+            <span>Свежо</span>
+            <span>Популярно</span>
+            <span>Скидка</span>
+          </div>
+        </div>
+        <div class="mini-card">
+          <h3>Сэкономьте</h3>
+          <div class="meta">Бесплатная доставка при заказе от 500 ₽</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="catalog-toolbar">
+      <div class="toolbar-main">
+        <input type="text" id="search" placeholder="Поиск по товарам, категориям и вкусам...">
+        <button type="button" class="secondary" id="refresh">Обновить</button>
+      </div>
+      <div class="toolbar-row">
+        <div class="chip-group" id="category-pills"></div>
+        <label class="check-wrap">
+          <input type="checkbox" id="only-available">
+          Только в наличии
+        </label>
+      </div>
+    </section>
 
     <div id="products" class="products"></div>
-    <div id="empty" class="empty" style="display:none">Товары не найдены</div>
+    <div id="empty" class="empty">Ничего не найдено. Попробуйте изменить фильтр.</div>
   </div>
 
-  <!-- Корзина -->
-  <div class="cart" id="cart" style="display:none">
-    <h3>Корзина</h3>
-    <div id="cart-items"></div>
-    <div class="cart-total" id="cart-total"></div>
-    <button class="checkout" id="checkout">Оформить заказ</button>
-    <button class="secondary checkout" id="clear-cart" style="margin-top:8px">Очистить</button>
+  <div id="cart-overlay" class="cart-overlay"></div>
+  <aside id="cart-panel" class="cart-drawer" aria-label="Корзина">
+    <div class="cart-header">
+      <h3>Корзина</h3>
+      <button type="button" class="close-cart" id="close-cart" aria-label="Закрыть корзину">✕</button>
+    </div>
+
+    <div id="cart-items" class="cart-items"></div>
+
+    <div class="cart-footer">
+      <div id="cart-total" class="cart-total">Итого: 0.00 ₽</div>
+      <div id="cart-summary" class="cart-summary"></div>
+      <button type="button" id="checkout">Оформить заказ</button>
+    </div>
+  </aside>
+
+  <div id="checkout-modal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card">
+      <h3>Подтверждение заказа</h3>
+      <p>Проверьте адрес и комментарий, а затем подтвердите оформление.</p>
+
+      <form id="checkout-form" class="checkout-form">
+        <label>
+          Адрес доставки
+          <input type="text" id="delivery-address" name="delivery_address" placeholder="Улица, дом, подъезд, этаж" required>
+        </label>
+        <label>
+          Комментарий к заказу
+          <textarea id="order-comment" name="comment" placeholder="Необязательно: домофон, время доставки, пожелания"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="secondary" id="cancel-checkout">Отмена</button>
+          <button type="submit">Подтвердить заказ</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="/app.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
     let allProducts = [];
+    let activeCategory = "Все";
 
-    // ---------- Загрузка каталога ----------
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>\"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[char]));
+    }
+
+    function getProductEmoji(category, name) {
+      const map = {
+        "Молочные": "🥛",
+        "Хлеб": "🍞",
+        "Яйца": "🥚",
+        "Фрукты": "🍊",
+        "Сыры": "🧀",
+        "Овощи": "🥬",
+        "Мясо": "🥩",
+        "Напитки": "🥤",
+        "Кондитерские": "🍰",
+      };
+      return map[category] || (name && name.toLowerCase().includes("мяс") ? "🥩" : "🛍️");
+    }
+
+    function setCategory(category) {
+      activeCategory = category;
+      renderCategoryChips();
+      loadProducts();
+    }
+
+    function renderCategoryChips(categories = []) {
+      const chips = $("category-pills");
+      if (!chips) return;
+
+      const selected = activeCategory || "Все";
+      const options = categories.length ? ["Все", ...categories] : ["Все"];
+      chips.innerHTML = "";
+
+      options.forEach((item) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `chip ${selected === item ? "active" : ""}`;
+        button.textContent = item;
+        button.addEventListener("click", () => setCategory(item));
+        chips.appendChild(button);
+      });
+    }
+
+    async function loadCategories() {
+      try {
+        const products = await api("/products/?only_available=false");
+        const categories = [...new Set(products.map((p) => p.category).filter(Boolean))];
+        renderCategoryChips(categories);
+      } catch {
+        renderCategoryChips();
+      }
+    }
+
     async function loadProducts() {
       const search = $("search").value.trim();
-      const category = $("category").value;
+      const onlyAvailable = $("only-available").checked;
 
       const params = new URLSearchParams();
       if (search) params.append("search", search);
-      if (category) params.append("category", category);
+      if (activeCategory && activeCategory !== "Все") params.append("category", activeCategory);
+      if (onlyAvailable) params.append("only_available", "true");
 
       try {
-        allProducts = await api("/products/?" + params.toString());
+        allProducts = await api(`/products/?${params.toString()}`);
         renderProducts();
       } catch (err) {
         toast(err.message);
       }
     }
 
-    async function loadCategories() {
-      try {
-        const products = await api("/products/?only_available=false");
-        const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
-        const select = $("category");
-        cats.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          select.appendChild(opt);
-        });
-      } catch {}
-    }
-
     function renderProducts() {
       const box = $("products");
-      box.innerHTML = "";
-      $("empty").style.display = allProducts.length ? "none" : "block";
+      const empty = $("empty");
+      if (!box) return;
 
-      allProducts.forEach(p => {
-        const card = document.createElement("div");
+      box.innerHTML = "";
+      if (!allProducts.length) {
+        empty.classList.add("visible");
+        return;
+      }
+
+      empty.classList.remove("visible");
+      allProducts.forEach((product) => {
+        const card = document.createElement("article");
         card.className = "card";
         card.innerHTML = `
-          <div class="cat">${p.category || ""}</div>
-          <h3>${escapeHtml(p.name)}</h3>
-          <div class="desc">${escapeHtml(p.description || "")}</div>
-          <div class="stock ${p.stock > 0 ? "" : "out"}">
-            ${p.stock > 0 ? `В наличии: ${p.stock}` : "Нет в наличии"}
+          <div class="product-visual">${getProductEmoji(product.category, product.name)}</div>
+          <div class="card-body">
+            <div class="card-top">
+              <span class="card-cat">${escapeHtml(product.category || "Категория")}</span>
+              <span class="card-badge">${product.stock > 0 ? "В наличии" : "Нет в наличии"}</span>
+            </div>
+            <h3>${escapeHtml(product.name)}</h3>
+            <div class="desc">${escapeHtml(product.description || "Свежее и вкусное предложение для вашего дома.")}</div>
+            <div class="card-meta">
+              <div>
+                <div class="stock ${product.stock > 0 ? "" : "out"}">${product.stock > 0 ? `Остаток: ${product.stock}` : "Нет в наличии"}</div>
+                <div class="card-price">${Number(product.price || 0).toFixed(2)} ₽</div>
+              </div>
+            </div>
+            <button type="button" ${product.stock <= 0 ? "disabled" : ""}>В корзину</button>
           </div>
-          <div class="price">${p.price.toFixed(2)} ₽</div>
-          <button ${p.stock <= 0 ? "disabled" : ""}>В корзину</button>
         `;
-        const btn = card.querySelector("button");
-        if (p.stock > 0) {
-          btn.addEventListener("click", () => {
-            cart.add(p);
-            renderCart();
-            toast(`${p.name} добавлен`);
-          });
-        }
+
+        const button = card.querySelector("button");
+        button.addEventListener("click", () => {
+          cart.add(product);
+          renderCart();
+          toast(`${product.name} добавлен в корзину`);
+        });
+
         box.appendChild(card);
       });
     }
 
-    function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, c => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      })[c]);
+    function openCheckoutModal() {
+      const modal = $("checkout-modal");
+      if (!modal) return;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
     }
 
-    // ---------- Корзина ----------
-    function renderCart() {
-      const items = cart.get();
-      const box = $("cart");
-      const list = $("cart-items");
+    function closeCheckoutModal() {
+      const modal = $("checkout-modal");
+      if (!modal) return;
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
 
-      if (!items.length) {
-        box.style.display = "none";
-        return;
-      }
-      box.style.display = "block";
-      list.innerHTML = "";
+    function bindCheckout() {
+      const checkoutBtn = $("checkout");
+      if (!checkoutBtn) return;
 
-      items.forEach(i => {
-        const row = document.createElement("div");
-        row.className = "cart-item";
-        row.innerHTML = `
-          <span>${escapeHtml(i.name)}</span>
-          <div class="qty">
-            <button data-act="dec" data-id="${i.id}">−</button>
-            <span>${i.qty}</span>
-            <button data-act="inc" data-id="${i.id}">+</button>
-          </div>
-          <span>${(i.price * i.qty).toFixed(2)} ₽</span>
-        `;
-        list.appendChild(row);
+      checkoutBtn.addEventListener("click", async () => {
+        if (!auth.isLoggedIn()) {
+          toast("Сначала войдите в аккаунт");
+          setTimeout(() => (location.href = "/login.html"), 700);
+          return;
+        }
+
+        const items = cart.get();
+        if (!items.length) {
+          toast("Корзина пуста");
+          return;
+        }
+
+        openCheckoutModal();
       });
 
-      $("cart-total").textContent = `Итого: ${cart.total().toFixed(2)} ₽`;
+      $("cancel-checkout").addEventListener("click", closeCheckoutModal);
+      $("checkout-modal").addEventListener("click", (event) => {
+        if (event.target.id === "checkout-modal") closeCheckoutModal();
+      });
 
-      list.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = +btn.dataset.id;
-          const items = cart.get();
-          const item = items.find(i => i.id === id);
-          if (!item) return;
-          const delta = btn.dataset.act === "inc" ? 1 : -1;
-          cart.setQty(id, item.qty + delta);
+      $("checkout-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const address = $("delivery-address").value.trim();
+        const comment = $("order-comment").value.trim();
+
+        if (!address) {
+          toast("Введите адрес доставки");
+          return;
+        }
+
+        try {
+          const items = cart.get().map((item) => ({ product_id: item.id, quantity: item.qty }));
+          await api("/orders/", {
+            method: "POST",
+            body: JSON.stringify({
+              items,
+              delivery_address: address,
+              comment: comment || null,
+            }),
+          });
+
+          cart.clear();
           renderCart();
-        });
+          closeCheckoutModal();
+          $("delivery-address").value = "";
+          $("order-comment").value = "";
+          toast("Заказ оформлен успешно!");
+          setTimeout(() => {
+            if (location.pathname === "/") location.href = "/orders.html";
+          }, 600);
+        } catch (err) {
+          toast(err.message);
+        }
       });
     }
 
-    $("clear-cart").addEventListener("click", () => {
-      if (confirm("Очистить корзину?")) {
-        cart.clear();
-        renderCart();
-      }
+    document.addEventListener("DOMContentLoaded", () => {
+      $("hero-order").addEventListener("click", () => {
+        document.querySelector(".catalog-toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      $("hero-login").addEventListener("click", () => {
+        location.href = "/login.html";
+      });
+
+      $("search").addEventListener("input", () => {
+        clearTimeout(window.__searchTimer);
+        window.__searchTimer = setTimeout(loadProducts, 250);
+      });
+
+      $("only-available").addEventListener("change", loadProducts);
+      $("refresh").addEventListener("click", loadProducts);
+      $("close-cart").addEventListener("click", closeCart);
+      $("cart-overlay").addEventListener("click", closeCart);
+
+      bindCheckout();
+      renderCart();
+      loadCategories();
+      loadProducts();
     });
-
-    // ---------- Оформление заказа ----------
-    $("checkout").addEventListener("click", async () => {
-      if (!auth.isLoggedIn()) {
-        toast("Сначала войдите в аккаунт");
-        setTimeout(() => location.href = "/login.html", 800);
-        return;
-      }
-
-      const address = prompt("Адрес доставки:", "");
-      if (!address) return;
-
-      const comment = prompt("Комментарий к заказу (необязательно):", "") || null;
-
-      const items = cart.get().map(i => ({ product_id: i.id, quantity: i.qty }));
-
-      try {
-        await api("/orders/", {
-          method: "POST",
-          body: JSON.stringify({
-            items,
-            delivery_address: address,
-            comment,
-          }),
-        });
-        cart.clear();
-        renderCart();
-        toast("Заказ оформлен!");
-        setTimeout(() => location.href = "/orders.html", 800);
-      } catch (err) {
-        toast(err.message);
-      }
-    });
-
-    // ---------- Фильтры ----------
-    let t;
-    $("search").addEventListener("input", () => {
-      clearTimeout(t);
-      t = setTimeout(loadProducts, 300);
-    });
-    $("category").addEventListener("change", loadProducts);
-    $("refresh").addEventListener("click", loadProducts);
-
-    // ---------- Старт ----------
-    loadCategories();
-    loadProducts();
-    renderCart();
   </script>
 </body>
 </html>
