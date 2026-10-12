@@ -2,39 +2,58 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Вход — FastMart </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход — FastMart</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <header id="header"></header>
 
-  <div class="form-box">
-    <h2 id="title">Вход</h2>
-    <div id="msg" class="msg"></div>
+  <div class="form-shell">
+    <div class="form-side">
+      <h2>Добро пожаловать в FastMart</h2>
+      <p>Быстрая доставка, свежие продукты и безупречный сервис — всё в одном месте.</p>
+      <ul>
+        <li>Доставка за 15 минут</li>
+        <li>Удобная корзина и быстрый checkout</li>
+        <li>Личный кабинет с историей заказов</li>
+      </ul>
+    </div>
 
-    <form id="form">
-      <input type="text"     id="username" placeholder="Имя пользователя" required>
-      <input type="password" id="password" placeholder="Пароль" required>
+    <div class="form-panel">
+      <div class="form-box">
+        <h2 id="title">Вход</h2>
+        <div id="msg" class="msg"></div>
 
-      <div id="register-fields" style="display:none">
-        <input type="email" id="email" placeholder="Email">
-        <input type="text"  id="full_name" placeholder="ФИО (необязательно)">
-        <input type="text"  id="phone" placeholder="Телефон (необязательно)">
-        <input type="text"  id="address" placeholder="Адрес доставки (необязательно)">
+        <form id="form">
+          <input type="text" id="username" placeholder="Имя пользователя" required>
+
+          <div class="password-line">
+            <input type="password" id="password" placeholder="Пароль" required>
+            <button type="button" class="toggle-password" id="toggle-password" aria-label="Показать пароль">Показать</button>
+          </div>
+
+          <div id="register-fields" style="display:none">
+            <input type="email" id="email" placeholder="Email">
+            <input type="text" id="full_name" placeholder="ФИО (необязательно)">
+            <input type="text" id="phone" placeholder="Телефон (необязательно)">
+            <input type="text" id="address" placeholder="Адрес доставки (необязательно)">
+          </div>
+
+          <button type="submit" id="submitBtn">Войти</button>
+        </form>
+
+        <p class="switch">
+          <span id="switch-text">Нет аккаунта?</span>
+          <a href="#" id="switch-link">Зарегистрироваться</a>
+        </p>
       </div>
-
-      <button type="submit" id="submitBtn">Войти</button>
-    </form>
-
-    <p class="switch">
-      <span id="switch-text">Нет аккаунта?</span>
-      <a href="#" id="switch-link">Зарегистрироваться</a>
-    </p>
+    </div>
   </div>
 
   <script src="/app.js"></script>
   <script>
-    let mode = "login"; // login | register
+    let mode = "login";
 
     const $ = (id) => document.getElementById(id);
     const msg = $("msg");
@@ -43,7 +62,15 @@
       msg.textContent = text;
       msg.className = "msg " + type;
     }
+
     function clearMsg() { msg.className = "msg"; }
+
+    $("toggle-password").addEventListener("click", () => {
+      const passwordInput = $("password");
+      const show = passwordInput.type === "password";
+      passwordInput.type = show ? "text" : "password";
+      $("toggle-password").textContent = show ? "Скрыть" : "Показать";
+    });
 
     $("switch-link").addEventListener("click", (e) => {
       e.preventDefault();
@@ -56,7 +83,6 @@
       $("switch-text").textContent = isReg ? "Уже есть аккаунт?" : "Нет аккаунта?";
       $("switch-link").textContent = isReg ? "Войти" : "Зарегистрироваться";
       $("register-fields").style.display = isReg ? "block" : "none";
-
       $("email").required = isReg;
     });
 
@@ -86,7 +112,6 @@
           });
         }
 
-        // Логин (form-data, как требует OAuth2PasswordRequestForm)
         const form = new URLSearchParams();
         form.append("username", username);
         form.append("password", password);
@@ -102,7 +127,7 @@
 
         auth.setToken(data.access_token);
         showMsg("Успешно! Перенаправляем...", "ok");
-        setTimeout(() => location.href = "/", 500);
+        setTimeout(() => location.href = "/", 600);
       } catch (err) {
         showMsg(err.message);
       }
