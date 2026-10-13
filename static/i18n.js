@@ -486,17 +486,13 @@ const LANGS = [
   { code: "ru", short: "RU",  name: "Русский", locale: "ru-RU" },
   { code: "en", short: "EN",  name: "English", locale: "en-US" },
 ];
-const DEFAULT_LANG = "en"; // если язык браузера не hy/ru/en
+const DEFAULT_LANG = "hy"; // язык при первом заходе, пока посетитель не выбрал другой
 
 function detectLang() {
   try {
     const saved = localStorage.getItem("lang");
     if (saved && I18N[saved]) return saved;
   } catch {}
-  for (const l of navigator.languages || [navigator.language || ""]) {
-    const code = String(l).toLowerCase().split("-")[0];
-    if (I18N[code]) return code;
-  }
   return DEFAULT_LANG;
 }
 

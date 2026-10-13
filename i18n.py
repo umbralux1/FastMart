@@ -9,7 +9,8 @@ from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
 SUPPORTED_LANGS = ("ru", "en", "hy")
-DEFAULT_LANG = "ru"
+DEFAULT_LANG = "ru"      # основной язык данных: поля name/description/category — на русском
+API_DEFAULT_LANG = "hy"  # язык ошибок API, если клиент не прислал Accept-Language
 
 # Поля товара, у которых есть переводы: name → name_en, name_hy
 TRANSLATED_FIELDS = ("name", "description", "category")
@@ -86,7 +87,7 @@ MESSAGES = {
 def pick_lang(accept_language: str | None) -> str:
     """'hy-AM,hy;q=0.9,en;q=0.8' → 'hy'. Учитывает веса q."""
     if not accept_language:
-        return DEFAULT_LANG
+        return API_DEFAULT_LANG
     candidates = []
     for i, part in enumerate(accept_language.split(",")):
         piece = part.strip().split(";")
@@ -103,7 +104,7 @@ def pick_lang(accept_language: str | None) -> str:
     for _, _, code in sorted(candidates):
         if code in SUPPORTED_LANGS:
             return code
-    return DEFAULT_LANG
+    return API_DEFAULT_LANG
 
 
 def translate(key: str, lang: str, **params) -> str:
