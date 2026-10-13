@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-title="title.admin">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16a34a">
-  <title>Админка — FastMarket</title>
-  <link rel="stylesheet" href="/style.css?v=2">
+  <title>FastMarket</title>
+  <link rel="stylesheet" href="/style.css?v=3">
   <style>
     .tabs {
       display: flex;
@@ -124,6 +124,21 @@
       .row-title { flex-wrap: wrap; gap: 8px; }
     }
 
+    .lang-block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 12px 0;
+      margin-bottom: 12px;
+    }
+    .lang-block legend {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 6px;
+      color: var(--text-2);
+    }
+    .hint { font-size: 12px; color: var(--muted); margin: -4px 0 12px; }
+    .muted { color: var(--muted); font-size: 12px; }
+
     .status-select {
       padding: 6px 10px;
       border: 1px solid #d1d5db;
@@ -137,31 +152,31 @@
 
   <div class="container">
     <div id="no-access" class="empty" style="display:none">
-      ⛔ Доступ только для администраторов<br><br>
-      <a href="/" style="color:#16a34a; font-weight:600;">← На главную</a>
+      <span data-i18n="admin.no_access"></span><br><br>
+      <a href="/" style="color:var(--accent); font-weight:600;" data-i18n="admin.home"></a>
     </div>
 
     <div id="admin-panel" style="display:none">
       <div class="tabs">
-        <button data-tab="products" class="active">📦 Товары</button>
-        <button data-tab="orders">🧾 Заказы</button>
-        <button data-tab="users">👥 Пользователи</button>
+        <button data-tab="products" class="active" data-i18n="admin.tab_products"></button>
+        <button data-tab="orders" data-i18n="admin.tab_orders"></button>
+        <button data-tab="users" data-i18n="admin.tab_users"></button>
       </div>
 
       <div id="tab-products" class="tab-content">
         <div class="row-title">
-          <h2>Товары</h2>
-          <button id="add-product">+ Добавить товар</button>
+          <h2 data-i18n="admin.products"></h2>
+          <button id="add-product" data-i18n="admin.add_product"></button>
         </div>
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Название</th>
-              <th>Категория</th>
-              <th>Цена</th>
-              <th>Склад</th>
-              <th>Статус</th>
+              <th data-i18n="admin.th_name"></th>
+              <th data-i18n="admin.th_category"></th>
+              <th data-i18n="admin.th_price"></th>
+              <th data-i18n="admin.th_stock"></th>
+              <th data-i18n="admin.th_status"></th>
               <th></th>
             </tr>
           </thead>
@@ -171,18 +186,18 @@
 
       <div id="tab-orders" class="tab-content" style="display:none">
         <div class="row-title">
-          <h2>Заказы</h2>
-          <button class="secondary" id="refresh-orders">Обновить</button>
+          <h2 data-i18n="admin.orders"></h2>
+          <button class="secondary" id="refresh-orders" data-i18n="admin.refresh"></button>
         </div>
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Пользователь</th>
-              <th>Сумма</th>
-              <th>Адрес</th>
-              <th>Статус</th>
-              <th>Дата</th>
+              <th data-i18n="admin.th_user"></th>
+              <th data-i18n="admin.th_sum"></th>
+              <th data-i18n="admin.th_address"></th>
+              <th data-i18n="admin.th_status"></th>
+              <th data-i18n="admin.th_date"></th>
               <th></th>
             </tr>
           </thead>
@@ -192,17 +207,17 @@
 
       <div id="tab-users" class="tab-content" style="display:none">
         <div class="row-title">
-          <h2>Пользователи</h2>
+          <h2 data-i18n="admin.users"></h2>
         </div>
         <table>
           <thead>
             <tr>
               <th>ID</th>
-              <th>Username</th>
+              <th data-i18n="admin.th_username"></th>
               <th>Email</th>
-              <th>ФИО</th>
-              <th>Роль</th>
-              <th>Создан</th>
+              <th data-i18n="admin.th_full_name"></th>
+              <th data-i18n="admin.th_role"></th>
+              <th data-i18n="admin.th_created"></th>
               <th></th>
             </tr>
           </thead>
@@ -212,7 +227,8 @@
     </div>
   </div>
 
-  <script src="/app.js?v=2"></script>
+  <script src="/i18n.js?v=3"></script>
+  <script src="/app.js?v=3"></script>
   <script>
     const $ = (id) => document.getElementById(id);
 
@@ -222,14 +238,8 @@
       })[c]);
     }
 
-    const STATUS_RU = {
-      pending:    "Ожидает",
-      confirmed:  "Подтверждён",
-      delivering: "В доставке",
-      delivered:  "Доставлен",
-      cancelled:  "Отменён",
-    };
-    const STATUSES = Object.keys(STATUS_RU);
+    const STATUSES = ["pending", "confirmed", "delivering", "delivered", "cancelled"];
+    const statusLabel = (s) => t("status." + s);
 
     // ---------- Проверка доступа ----------
     async function checkAccess() {
@@ -280,7 +290,7 @@
       body.innerHTML = "";
 
       if (!productsCache.length) {
-        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6b7280">Товаров нет</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted)">${t("admin.no_products")}</td></tr>`;
         return;
       }
 
@@ -288,13 +298,16 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${p.id}</td>
-          <td>${escapeHtml(p.name)}</td>
-          <td>${escapeHtml(p.category || "—")}</td>
+          <td>
+            ${escapeHtml(loc(p, "name"))}
+            ${missingLangs(p).length ? `<div class="muted">${t("admin.no_translation")}: ${missingLangs(p).join(", ")}</div>` : ""}
+          </td>
+          <td>${escapeHtml(loc(p, "category") || "—")}</td>
           <td>${fmtPrice(p.price)}</td>
           <td>${p.stock}</td>
           <td>
             <span class="badge ${p.is_available ? "delivered" : "cancelled"}">
-              ${p.is_available ? "Активен" : "Скрыт"}
+              ${p.is_available ? t("admin.active") : t("admin.hidden")}
             </span>
           </td>
           <td>
@@ -316,48 +329,67 @@
       });
     }
 
+    // Какие переводы названия не заполнены: ["EN", "ՀԱՅ"]
+    function missingLangs(p) {
+      return LANGS.filter(l => l.code !== "ru" && !p[`name_${l.code}`]).map(l => l.short);
+    }
+
     async function deleteProduct(id) {
-      if (!confirm("Удалить товар?")) return;
+      if (!confirm(t("admin.delete_confirm"))) return;
       try {
         await api(`/products/${id}`, { method: "DELETE" });
-        toast("Товар удалён");
+        toast(t("admin.deleted"));
         loadProducts();
       } catch (err) { toast(err.message); }
     }
 
     // ---------- Модалка товара ----------
+    // Блок полей для одного языка: ru — основные поля (name), остальные — name_en, name_hy
+    function langFields(p, code) {
+      const sfx = code === "ru" ? "" : "_" + code;
+      const v = (f) => escapeHtml(p[f + sfx] || "");
+      return `
+        <fieldset class="lang-block" lang="${code}">
+          <legend>${t("admin.lang_" + code)}</legend>
+          <label for="m-name${sfx}">${t("admin.f_name")}${code === "ru" ? " *" : ""}</label>
+          <input id="m-name${sfx}" value="${v("name")}">
+          <label for="m-desc${sfx}">${t("admin.f_desc")}</label>
+          <textarea id="m-desc${sfx}" rows="2">${v("description")}</textarea>
+          <label for="m-cat${sfx}">${t("admin.f_cat")}</label>
+          <input id="m-cat${sfx}" value="${v("category")}">
+        </fieldset>`;
+    }
+
     function openProductModal(product = null) {
       const isEdit = !!product;
-      const p = product || { name: "", description: "", price: 0, category: "", stock: 0, is_available: true };
+      const p = product || { name: "", description: "", price: "", category: "", stock: 0, is_available: true };
 
       const bg = document.createElement("div");
       bg.className = "modal-bg";
       bg.innerHTML = `
         <div class="modal">
-          <h3>${isEdit ? "Редактировать товар" : "Новый товар"}</h3>
-          <label>Название *</label>
-          <input id="m-name" value="${escapeHtml(p.name)}">
-          <label>Описание</label>
-          <textarea id="m-desc" rows="2">${escapeHtml(p.description || "")}</textarea>
+          <h3>${isEdit ? t("admin.edit_title") : t("admin.new_title")}</h3>
           <div class="row-2">
             <div>
-              <label>Цена (₽) *</label>
-              <input id="m-price" type="number" step="0.01" min="0" value="${p.price}">
+              <label for="m-price">${t("admin.f_price")} *</label>
+              <input id="m-price" type="number" step="10" min="0" inputmode="numeric" value="${p.price}">
             </div>
             <div>
-              <label>Склад</label>
-              <input id="m-stock" type="number" min="0" value="${p.stock}">
+              <label for="m-stock">${t("admin.f_stock")}</label>
+              <input id="m-stock" type="number" min="0" inputmode="numeric" value="${p.stock}">
             </div>
           </div>
-          <label>Категория</label>
-          <input id="m-cat" value="${escapeHtml(p.category || "")}">
+          ${langFields(p, "ru")}
+          <p class="hint">${t("admin.translations_hint")}</p>
+          ${langFields(p, "hy")}
+          ${langFields(p, "en")}
           <label style="display:flex;align-items:center;gap:8px;margin-top:8px">
             <input type="checkbox" id="m-avail" ${p.is_available ? "checked" : ""} style="width:auto;margin:0">
-            Доступен для заказа
+            ${t("admin.f_avail")}
           </label>
           <div class="modal-actions">
-            <button class="secondary" id="m-cancel">Отмена</button>
-            <button id="m-save">${isEdit ? "Сохранить" : "Создать"}</button>
+            <button class="secondary" id="m-cancel">${t("admin.cancel")}</button>
+            <button id="m-save">${isEdit ? t("admin.save") : t("admin.create")}</button>
           </div>
         </div>
       `;
@@ -366,25 +398,30 @@
       bg.querySelector("#m-cancel").addEventListener("click", () => bg.remove());
       bg.addEventListener("click", (e) => { if (e.target === bg) bg.remove(); });
 
+      const val = (id) => bg.querySelector("#" + id).value.trim() || null;
+
       bg.querySelector("#m-save").addEventListener("click", async () => {
         const data = {
-          name:        bg.querySelector("#m-name").value.trim(),
-          description: bg.querySelector("#m-desc").value.trim() || null,
-          price:       parseFloat(bg.querySelector("#m-price").value),
-          stock:       parseInt(bg.querySelector("#m-stock").value, 10) || 0,
-          category:    bg.querySelector("#m-cat").value.trim() || null,
+          price:        parseFloat(bg.querySelector("#m-price").value),
+          stock:        parseInt(bg.querySelector("#m-stock").value, 10) || 0,
           is_available: bg.querySelector("#m-avail").checked,
         };
-        if (!data.name) return toast("Введите название");
-        if (!(data.price > 0)) return toast("Цена должна быть > 0");
+        for (const code of ["ru", "en", "hy"]) {
+          const sfx = code === "ru" ? "" : "_" + code;
+          data["name" + sfx]        = val("m-name" + sfx);
+          data["description" + sfx] = val("m-desc" + sfx);
+          data["category" + sfx]    = val("m-cat" + sfx);
+        }
+        if (!data.name) return toast(t("admin.need_name"));
+        if (!(data.price > 0)) return toast(t("admin.price_positive"));
 
         try {
           if (isEdit) {
             await api(`/products/${product.id}`, { method: "PATCH", body: JSON.stringify(data) });
-            toast("Товар обновлён");
+            toast(t("admin.updated"));
           } else {
             await api("/products/", { method: "POST", body: JSON.stringify(data) });
-            toast("Товар создан");
+            toast(t("admin.created"));
           }
           bg.remove();
           loadProducts();
@@ -407,20 +444,20 @@
       body.innerHTML = "";
 
       if (!orders.length) {
-        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6b7280">Заказов нет</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted)">${t("admin.no_orders")}</td></tr>`;
         return;
       }
 
       orders.forEach(o => {
-        const date = new Date(o.created_at).toLocaleString("ru-RU");
+        const date = fmtDateTime(o.created_at);
         const options = STATUSES.map(s =>
-          `<option value="${s}" ${s === o.status ? "selected" : ""}>${STATUS_RU[s]}</option>`
+          `<option value="${s}" ${s === o.status ? "selected" : ""}>${statusLabel(s)}</option>`
         ).join("");
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>#${o.id}</td>
-          <td>user #${o.user_id}</td>
+          <td>${t("admin.user_n", { id: o.user_id })}</td>
           <td>${fmtPrice(o.total_price)}</td>
           <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
             ${escapeHtml(o.delivery_address)}
@@ -440,7 +477,7 @@
               method: "PATCH",
               body: JSON.stringify({ status }),
             });
-            toast(`Статус #${o.id} → ${STATUS_RU[status]}`);
+            toast(t("admin.status_changed", { id: o.id, status: statusLabel(status) }));
           } catch (err) {
             toast(err.message);
             e.target.value = o.status; // откат
@@ -455,24 +492,24 @@
       let items = [];
       try { items = JSON.parse(o.items_json); } catch {}
       const list = items.map(i =>
-        `<li>${escapeHtml(i.name)} × ${i.quantity} — ${fmtPrice(i.line_total)}</li>`
+        `<li>${escapeHtml(itemName(i))} × ${i.quantity} — ${fmtPrice(i.line_total)}</li>`
       ).join("");
 
       const bg = document.createElement("div");
       bg.className = "modal-bg";
       bg.innerHTML = `
         <div class="modal">
-          <h3>Заказ #${o.id}</h3>
-          <p style="margin-bottom:10px"><b>Статус:</b>
-            <span class="badge ${o.status}">${STATUS_RU[o.status]}</span>
+          <h3>${t("admin.order_title", { id: o.id })}</h3>
+          <p style="margin-bottom:10px"><b>${t("admin.f_status")}:</b>
+            <span class="badge ${o.status}">${statusLabel(o.status)}</span>
           </p>
-          <p style="margin-bottom:10px"><b>Адрес:</b> ${escapeHtml(o.delivery_address)}</p>
-          ${o.comment ? `<p style="margin-bottom:10px"><b>Комментарий:</b> ${escapeHtml(o.comment)}</p>` : ""}
-          <p style="margin-bottom:6px"><b>Состав:</b></p>
+          <p style="margin-bottom:10px"><b>${t("admin.f_address")}:</b> ${escapeHtml(o.delivery_address)}</p>
+          ${o.comment ? `<p style="margin-bottom:10px"><b>${t("admin.f_comment")}:</b> ${escapeHtml(o.comment)}</p>` : ""}
+          <p style="margin-bottom:6px"><b>${t("admin.f_items")}:</b></p>
           <ul style="margin-left:20px;margin-bottom:12px">${list}</ul>
-          <p style="font-size:18px;font-weight:700;text-align:right">Итого: ${fmtPrice(o.total_price)}</p>
+          <p style="font-size:18px;font-weight:700;text-align:right">${t("admin.total")}: ${fmtPrice(o.total_price)}</p>
           <div class="modal-actions">
-            <button class="secondary" id="close">Закрыть</button>
+            <button class="secondary" id="close">${t("admin.close")}</button>
           </div>
         </div>
       `;
@@ -496,12 +533,12 @@
       body.innerHTML = "";
 
       if (!users.length) {
-        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6b7280">Пусто</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted)">${t("admin.empty")}</td></tr>`;
         return;
       }
 
       users.forEach(u => {
-        const date = new Date(u.created_at).toLocaleDateString("ru-RU");
+        const date = fmtDate(u.created_at);
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${u.id}</td>
@@ -510,12 +547,12 @@
           <td>${escapeHtml(u.full_name || "—")}</td>
           <td>
             <span class="badge ${u.is_admin ? "delivered" : "pending"}">
-              ${u.is_admin ? "Админ" : "Юзер"}
+              ${u.is_admin ? t("admin.role_admin") : t("admin.role_user")}
             </span>
           </td>
           <td>${date}</td>
           <td>
-            ${u.is_admin ? "" : `<button class="secondary" data-act="promote" data-id="${u.id}">Сделать админом</button>`}
+            ${u.is_admin ? "" : `<button class="secondary" data-act="promote" data-id="${u.id}">${t("admin.make_admin")}</button>`}
           </td>
         `;
         body.appendChild(tr);
@@ -523,10 +560,10 @@
 
       body.querySelectorAll("button[data-act=promote]").forEach(btn => {
         btn.addEventListener("click", async () => {
-          if (!confirm("Сделать пользователя администратором?")) return;
+          if (!confirm(t("admin.make_admin_confirm"))) return;
           try {
             await api(`/users/admin/${btn.dataset.id}/make-admin`, { method: "PATCH" });
-            toast("Готово");
+            toast(t("admin.done"));
             loadUsers();
           } catch (err) { toast(err.message); }
         });

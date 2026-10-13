@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-title="title.catalog">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16a34a">
-  <title>Каталог — FastMarket</title>
-  <link rel="stylesheet" href="/style.css?v=2">
+  <title>FastMarket</title>
+  <link rel="stylesheet" href="/style.css?v=3">
 </head>
 <body>
   <header id="header"></header>
@@ -14,33 +14,33 @@
     <!-- Каталог -->
     <section class="catalog">
       <div class="search">
-        <input type="search" id="search" placeholder="Найти продукты" aria-label="Поиск товара" autocomplete="off">
+        <input type="search" id="search" data-i18n-ph="search.placeholder" data-i18n-aria="search.aria" autocomplete="off">
       </div>
-      <div class="chips" id="chips" role="tablist" aria-label="Категории"></div>
+      <div class="chips" id="chips" role="tablist" data-i18n-aria="cats.aria"></div>
 
       <div id="products" class="products" aria-live="polite"></div>
-      <div id="empty" class="empty" hidden>Ничего не нашлось 🤷</div>
+      <div id="empty" class="empty" hidden data-i18n="catalog.empty"></div>
     </section>
 
     <!-- Корзина: справа на десктопе, шторка снизу на телефоне -->
-    <aside class="cart" id="cart" aria-label="Корзина">
+    <aside class="cart" id="cart" data-i18n-aria="cart.aria">
       <div class="cart-head">
-        <h3>Корзина</h3>
+        <h3 data-i18n="cart.title"></h3>
         <div class="tools">
-          <button class="link" id="clear-cart" hidden>Очистить</button>
-          <button class="icon sheet-close" id="cart-close" aria-label="Закрыть корзину">×</button>
+          <button class="link" id="clear-cart" hidden data-i18n="cart.clear"></button>
+          <button class="icon sheet-close" id="cart-close" data-i18n-aria="cart.close">×</button>
         </div>
       </div>
 
       <div class="cart-empty" id="cart-empty">
         <div class="big">🧺</div>
-        Корзина пуста.<br>Добавьте что-нибудь из каталога.
+        <div data-i18n-html="cart.empty"></div>
       </div>
       <div class="cart-items" id="cart-items"></div>
 
       <div class="cart-foot" id="cart-foot" hidden>
-        <div class="cart-total"><span>Итого</span><span id="cart-total"></span></div>
-        <button class="checkout" id="checkout">Оформить заказ</button>
+        <div class="cart-total"><span data-i18n="cart.total"></span><span id="cart-total"></span></div>
+        <button class="checkout" id="checkout" data-i18n="cart.checkout"></button>
       </div>
     </aside>
   </main>
@@ -55,30 +55,31 @@
   <!-- Оформление заказа -->
   <dialog class="sheet" id="checkout-dialog" aria-labelledby="checkout-title">
     <form id="checkout-form">
-      <h3 id="checkout-title">Оформление заказа</h3>
+      <h3 id="checkout-title" data-i18n="checkout.title"></h3>
 
       <div class="field">
-        <label for="addr">Адрес доставки</label>
+        <label for="addr" data-i18n="checkout.address"></label>
         <textarea id="addr" rows="2" required minlength="5" maxlength="500"
-                  autocomplete="street-address" placeholder="Улица, дом, квартира, подъезд"></textarea>
-        <label class="check"><input type="checkbox" id="save-addr" checked> Запомнить адрес</label>
+                  autocomplete="street-address" data-i18n-ph="checkout.address_ph"></textarea>
+        <label class="check"><input type="checkbox" id="save-addr" checked> <span data-i18n="checkout.save_addr"></span></label>
       </div>
 
       <div class="field">
-        <label for="comment">Комментарий курьеру <span style="font-weight:400;color:var(--muted)">— необязательно</span></label>
-        <textarea id="comment" rows="2" maxlength="1000" placeholder="Например: домофон не работает, позвоните"></textarea>
+        <label for="comment"><span data-i18n="checkout.comment"></span> <span style="font-weight:400;color:var(--muted)" data-i18n="checkout.optional"></span></label>
+        <textarea id="comment" rows="2" maxlength="1000" data-i18n-ph="checkout.comment_ph"></textarea>
       </div>
 
       <div class="summary" id="summary"></div>
 
       <div class="dialog-actions">
-        <button type="button" class="secondary" id="checkout-cancel">Назад</button>
-        <button type="submit" id="place-order">Заказать</button>
+        <button type="button" class="secondary" id="checkout-cancel" data-i18n="checkout.back"></button>
+        <button type="submit" id="place-order"></button>
       </div>
     </form>
   </dialog>
 
-  <script src="/app.js?v=2"></script>
+  <script src="/i18n.js?v=3"></script>
+  <script src="/app.js?v=3"></script>
   <script>
     const $ = (id) => document.getElementById(id);
 
@@ -109,9 +110,9 @@
     function stepperHtml(id, qty, max, small = false) {
       return `
         <div class="stepper ${small ? "sm" : ""}">
-          <button data-act="dec" data-id="${id}" aria-label="Убрать одну штуку">−</button>
+          <button data-act="dec" data-id="${id}" aria-label="${t("stepper.dec")}">−</button>
           <span>${qty}</span>
-          <button data-act="inc" data-id="${id}" aria-label="Добавить ещё" ${qty >= max ? "disabled" : ""}>+</button>
+          <button data-act="inc" data-id="${id}" aria-label="${t("stepper.inc")}" ${qty >= max ? "disabled" : ""}>+</button>
         </div>`;
     }
 
@@ -149,23 +150,28 @@
     }
 
     // Полный список: категории + сверка корзины с актуальными ценами и остатками
-    async function loadAll() {
+    async function loadAll({ quiet = false } = {}) {
       try {
         const all = await api("/products/?only_available=false");
         all.forEach(p => byId.set(p.id, p));
-        renderChips([...new Set(all.filter(p => p.is_available).map(p => p.category).filter(Boolean))]);
-        if (cart.sync(all)) toast("Корзина обновлена: изменились цены или наличие");
+        // Категория-ключ — русское название (по нему фильтрует API), подпись — на языке интерфейса
+        const cats = new Map();
+        all.filter(p => p.is_available && p.category)
+           .forEach(p => { if (!cats.has(p.category)) cats.set(p.category, loc(p, "category")); });
+        renderChips([...cats.entries()]);
+        if (cart.sync(all) && !quiet) toast(t("cart.synced"));
         renderCart();
       } catch {}
     }
 
+    // cats: [[ключ, подпись], ...]
     function renderChips(cats) {
       const box = $("chips");
       box.innerHTML = "";
-      ["", ...cats].forEach(c => {
+      [["", t("cats.all")], ...cats].forEach(([c, label]) => {
         const b = document.createElement("button");
         b.className = "chip" + (c === activeCat ? " active" : "");
-        b.textContent = c || "Все";
+        b.textContent = label;
         b.setAttribute("role", "tab");
         b.setAttribute("aria-selected", c === activeCat);
         b.addEventListener("click", () => {
@@ -183,9 +189,9 @@
 
     function cardFootHtml(p) {
       const price = `<span class="price">${fmtPrice(p.price)}</span>`;
-      if (p.stock <= 0) return `${price}<button class="add-btn" disabled>Нет в наличии</button>`;
+      if (p.stock <= 0) return `${price}<button class="add-btn" disabled>${t("card.out")}</button>`;
       const q = cart.qty(p.id);
-      if (!q) return `${price}<button class="add-btn" data-act="inc" data-id="${p.id}">В корзину</button>`;
+      if (!q) return `${price}<button class="add-btn" data-act="inc" data-id="${p.id}">${t("card.add")}</button>`;
       return price + stepperHtml(p.id, q, p.stock);
     }
 
@@ -196,10 +202,10 @@
       box.innerHTML = products.map(p => `
         <article class="card ${p.stock <= 0 ? "out" : ""}" data-card="${p.id}">
           <div class="card-img">${thumbHtml(p)}</div>
-          <div class="cat">${escapeHtml(p.category || "")}</div>
-          <h3>${escapeHtml(p.name)}</h3>
-          ${p.description ? `<div class="desc">${escapeHtml(p.description)}</div>` : ""}
-          ${p.stock > 0 && p.stock <= 5 ? `<div class="low">Осталось ${p.stock} шт.</div>` : ""}
+          <div class="cat">${escapeHtml(loc(p, "category"))}</div>
+          <h3>${escapeHtml(loc(p, "name"))}</h3>
+          ${p.description ? `<div class="desc">${escapeHtml(loc(p, "description"))}</div>` : ""}
+          ${p.stock > 0 && p.stock <= 5 ? `<div class="low">${t("card.low", { n: p.stock })}</div>` : ""}
           <div class="card-foot">${cardFootHtml(p)}</div>
         </article>
       `).join("");
@@ -236,7 +242,7 @@
         <div class="cart-item">
           <div class="thumb">${thumbHtml(i)}</div>
           <div>
-            <div class="name" title="${escapeHtml(i.name)}">${escapeHtml(i.name)}</div>
+            <div class="name" title="${escapeHtml(loc(i, "name"))}">${escapeHtml(loc(i, "name"))}</div>
             <div class="sum">${fmtPrice(i.price * i.qty)}</div>
           </div>
           ${stepperHtml(i.id, i.qty, i.stock ?? Infinity, true)}
@@ -249,7 +255,7 @@
       $("cart-total").textContent = fmtPrice(total);
 
       $("cart-bar").hidden = !has;
-      $("cart-bar-count").textContent = `${count} ${plural(count, "товар", "товара", "товаров")}`;
+      $("cart-bar-count").textContent = `${count} ${tp("cart.items", count)}`;
       $("cart-bar-total").textContent = fmtPrice(total);
 
       if (!has) closeSheet();
@@ -263,7 +269,7 @@
 
       if (btn.dataset.act === "inc") {
         const product = byId.get(id) || cart.get().find(i => i.id === id);
-        if (product && !cart.add(product)) toast("Больше нет в наличии");
+        if (product && !cart.add(product)) toast(t("cart.no_more"));
       } else {
         cart.setQty(id, cart.qty(id) - 1);
       }
@@ -278,7 +284,7 @@
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
 
     $("clear-cart").addEventListener("click", () => {
-      if (!confirm("Очистить корзину?")) return;
+      if (!confirm(t("cart.clear_confirm"))) return;
       cart.clear();
       renderCart();
       renderProducts();
@@ -293,16 +299,16 @@
       $("summary").innerHTML =
         items.map(i => `
           <div class="row">
-            <span>${escapeHtml(i.name)} × ${i.qty}</span>
+            <span>${escapeHtml(loc(i, "name"))} × ${i.qty}</span>
             <span>${fmtPrice(i.price * i.qty)}</span>
           </div>`).join("") +
-        `<div class="row total"><span>Итого</span><span>${fmtPrice(total)}</span></div>`;
-      $("place-order").textContent = `Заказать за ${fmtPrice(total)}`;
+        `<div class="row total"><span>${t("cart.total")}</span><span>${fmtPrice(total)}</span></div>`;
+      $("place-order").textContent = t("checkout.place", { sum: fmtPrice(total) });
     }
 
     $("checkout").addEventListener("click", async () => {
       if (!auth.isLoggedIn()) {
-        toast("Войдите, чтобы оформить заказ");
+        toast(t("checkout.login_first"));
         setTimeout(() => location.href = "/login.html", 900);
         return;
       }
@@ -338,7 +344,7 @@
 
       const btn = $("place-order");
       btn.disabled = true;
-      btn.textContent = "Оформляем…";
+      btn.textContent = t("checkout.placing");
 
       try {
         await api("/orders/", {
@@ -352,13 +358,14 @@
 
         cart.clear();
         dlg.close();
-        toast("Заказ оформлен! 🎉");
+        toast(t("checkout.done"));
         setTimeout(() => location.href = "/orders.html", 900);
       } catch (err) {
         toast(err.message);
         btn.disabled = false;
         // Скорее всего, изменился остаток — подтягиваем свежие данные
-        await loadAll();
+        // (тихо: важнее, чтобы пользователь прочитал ошибку сервера)
+        await loadAll({ quiet: true });
         await loadProducts();
         renderSummary();
         if (!cart.count()) dlg.close();
@@ -366,10 +373,10 @@
     });
 
     // ---------- Поиск ----------
-    let t;
+    let searchTimer;
     $("search").addEventListener("input", () => {
-      clearTimeout(t);
-      t = setTimeout(loadProducts, 300);
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(loadProducts, 300);
     });
 
     // ---------- Старт ----------

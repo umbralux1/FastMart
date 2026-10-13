@@ -1,10 +1,11 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Order, User
 from schemas import OrderCreate, OrderOut, OrderStatusUpdate
 from auth import get_current_user, get_current_admin
+from i18n import AppError
 from crud import create_order
 
 router = APIRouter(prefix="/orders", tags=["Заказы"])
@@ -42,9 +43,9 @@ def get_order(
 ):
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
-        raise HTTPException(status_code=404, detail="Заказ не найден")
+        raise AppError(404, "order.not_found")
     if order.user_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Нет доступа к этому заказу")
+        raise AppError(403, "order.forbidden")
     return order
 
 
@@ -56,11 +57,11 @@ def cancel_order(
 ):
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
-        raise HTTPException(status_code=404, detail="Заказ не найден")
+        raise AppError(404, "order.not_found")
     if order.user_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Нет доступа")
+        raise AppError(403, "order.forbidden")
     if order.status not in ("pending", "confirmed"):
-        raise HTTPException(status_code=400, detail="Нельзя отменить заказ в этом статусе")
+        raise AppError(400, "order.cannot_cancel")
     order.status = "cancelled"
     db.commit()
     db.refresh(order)
@@ -84,10 +85,10 @@ def change_status(
     _: User = Depends(get_current_admin),
 ):
     if data.status not in VALID_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Недопустимый статус. Разрешено: {VALID_STATUSES}")
+        raise AppError(400, "order.bad_status", allowed=", ".join(sorted(VALID_STATUSES)))
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
-        raise HTTPException(status_code=404, detail="Заказ не найден")
+        raise AppError(404, "order.not_found")
     order.status = data.status
     db.commit()
     db.refresh(order)

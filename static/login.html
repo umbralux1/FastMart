@@ -1,40 +1,41 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-title="title.login">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16a34a">
-  <title>Вход — FastMarket</title>
-  <link rel="stylesheet" href="/style.css?v=2">
+  <title>FastMarket</title>
+  <link rel="stylesheet" href="/style.css?v=3">
 </head>
 <body>
   <header id="header"></header>
 
   <div class="form-box">
-    <h2 id="title">Вход</h2>
+    <h2 id="title" data-i18n="login.title"></h2>
     <div id="msg" class="msg"></div>
 
     <form id="form">
-      <input type="text"     id="username" autocomplete="username" placeholder="Имя пользователя" required>
-      <input type="password" id="password" autocomplete="current-password" placeholder="Пароль" required>
+      <input type="text"     id="username" autocomplete="username" data-i18n-ph="login.username" required>
+      <input type="password" id="password" autocomplete="current-password" data-i18n-ph="login.password" required>
 
       <div id="register-fields" style="display:none">
-        <input type="email" id="email" autocomplete="email" placeholder="Email">
-        <input type="text"  id="full_name" autocomplete="name" placeholder="ФИО (необязательно)">
-        <input type="tel"   id="phone" autocomplete="tel" placeholder="Телефон (необязательно)">
-        <input type="text"  id="address" autocomplete="street-address" placeholder="Адрес доставки (необязательно)">
+        <input type="email" id="email" autocomplete="email" data-i18n-ph="login.email">
+        <input type="text"  id="full_name" autocomplete="name" data-i18n-ph="login.full_name">
+        <input type="tel"   id="phone" autocomplete="tel" data-i18n-ph="login.phone">
+        <input type="text"  id="address" autocomplete="street-address" data-i18n-ph="login.address">
       </div>
 
-      <button type="submit" id="submitBtn">Войти</button>
+      <button type="submit" id="submitBtn" data-i18n="login.submit"></button>
     </form>
 
     <p class="switch">
-      <span id="switch-text">Нет аккаунта?</span>
-      <a href="#" id="switch-link">Зарегистрироваться</a>
+      <span id="switch-text" data-i18n="login.no_account"></span>
+      <a href="#" id="switch-link" data-i18n="login.to_register"></a>
     </p>
   </div>
 
-  <script src="/app.js?v=2"></script>
+  <script src="/i18n.js?v=3"></script>
+  <script src="/app.js?v=3"></script>
   <script>
     let mode = "login"; // login | register
 
@@ -53,10 +54,10 @@
       mode = mode === "login" ? "register" : "login";
       const isReg = mode === "register";
 
-      $("title").textContent = isReg ? "Регистрация" : "Вход";
-      $("submitBtn").textContent = isReg ? "Создать аккаунт" : "Войти";
-      $("switch-text").textContent = isReg ? "Уже есть аккаунт?" : "Нет аккаунта?";
-      $("switch-link").textContent = isReg ? "Войти" : "Зарегистрироваться";
+      $("title").textContent = t(isReg ? "login.register_title" : "login.title");
+      $("submitBtn").textContent = t(isReg ? "login.register_submit" : "login.submit");
+      $("switch-text").textContent = t(isReg ? "login.has_account" : "login.no_account");
+      $("switch-link").textContent = t(isReg ? "login.to_login" : "login.to_register");
       $("register-fields").style.display = isReg ? "block" : "none";
 
       $("email").required = isReg;
@@ -71,7 +72,7 @@
       const password = $("password").value;
 
       if (!username || !password) {
-        return showMsg("Заполните логин и пароль");
+        return showMsg(t("login.fill"));
       }
 
       try {
@@ -96,15 +97,15 @@
 
         const res = await fetch("/users/login", {
           method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept-Language": LANG },
           body: form,
         });
 
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.detail || "Неверный логин или пароль");
+        if (!res.ok) throw new Error(data.detail || t("login.bad"));
 
         auth.setToken(data.access_token);
-        showMsg("Успешно! Перенаправляем...", "ok");
+        showMsg(t("login.success"), "ok");
         setTimeout(() => location.href = "/", 500);
       } catch (err) {
         showMsg(err.message);

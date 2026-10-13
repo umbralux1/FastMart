@@ -85,6 +85,21 @@ header nav a {
 
 header nav a:hover { color: var(--accent); }
 
+header nav { align-items: center; }
+
+.lang-switch {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.lang-switch:hover { border-color: var(--border-strong); }
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -677,7 +692,8 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.4); }
   :root { --header-h: 56px; }
   header { padding: 0 16px; }
   header h1 { font-size: 18px; }
-  header nav { gap: 14px; font-size: 14px; flex-wrap: nowrap; }
+  header { flex-wrap: wrap; row-gap: 2px; padding: 8px 16px; }
+  header nav { gap: 12px; font-size: 14px; flex-wrap: nowrap; margin-left: auto; }
   header nav a[href="/"] { display: none; }
 
   .container { padding: 16px; }
@@ -707,4 +723,9 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.4); }
 @media (max-width: 360px) {
   header h1 { font-size: 16px; }
   header nav { gap: 10px; font-size: 13px; }
+}
+
+/* Армянский шрифт: системные шрифты есть везде, но так текст выглядит ровнее */
+:lang(hy) body, body:lang(hy) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Armenian", "Arial Unicode MS", Roboto, sans-serif;
 }

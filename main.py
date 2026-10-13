@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import Base, engine, SessionLocal
+from database import Base, engine, SessionLocal, ensure_columns
+from i18n import AppError, app_error_handler
 from models import User, Product
 from auth import hash_password
 from routers import users, products, orders
@@ -11,12 +12,17 @@ import os
 
 
 Base.metadata.create_all(bind=engine)
+ensure_columns()
 
 app = FastAPI(
     title="FastMarket API",
-    description="Каталог продуктов и заказы для FastMarket",
-    version="1.0.0",
+    description="Каталог продуктов и заказы для FastMarket. "
+                "Цены — в армянских драмах (AMD). "
+                "Язык сообщений об ошибках выбирается по заголовку Accept-Language: ru, en, hy.",
+    version="1.1.0",
 )
+
+app.add_exception_handler(AppError, app_error_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,17 +63,38 @@ def seed_data():
             db.add(admin)
 
         if db.query(Product).count() == 0:
+            # Цены — в армянских драмах
             demo_products = [
-                Product(name="Молоко 3.2%", price=89.90, category="Молочные", stock=50,
-                        description="Пастеризованное молоко, 1 л"),
-                Product(name="Хлеб бородинский", price=45.00, category="Хлеб", stock=30,
-                        description="Свежий бородинский хлеб, 400 г"),
-                Product(name="Яйца С1", price=129.50, category="Яйца", stock=80,
-                        description="Куриные яйца, 10 шт"),
-                Product(name="Бананы", price=99.00, category="Фрукты", stock=100,
-                        description="Бананы, 1 кг"),
-                Product(name="Сыр Гауда", price=289.00, category="Сыры", stock=20,
-                        description="Сыр гауда, 200 г"),
+                Product(name="Молоко 3.2%", name_en="Milk 3.2%", name_hy="Կաթ 3,2%",
+                        price=390, stock=50,
+                        category="Молочные", category_en="Dairy", category_hy="Կաթնամթերք",
+                        description="Пастеризованное молоко, 1 л",
+                        description_en="Pasteurized milk, 1 L",
+                        description_hy="Պաստերիզացված կաթ, 1 լ"),
+                Product(name="Хлеб бородинский", name_en="Borodinsky rye bread", name_hy="Բորոդինսկի հաց",
+                        price=190, stock=30,
+                        category="Хлеб", category_en="Bread", category_hy="Հաց",
+                        description="Свежий бородинский хлеб, 400 г",
+                        description_en="Fresh dark rye bread, 400 g",
+                        description_hy="Թարմ տարեկանի հաց, 400 գ"),
+                Product(name="Яйца С1", name_en="Eggs, grade C1", name_hy="Ձու C1",
+                        price=560, stock=80,
+                        category="Яйца", category_en="Eggs", category_hy="Ձու",
+                        description="Куриные яйца, 10 шт",
+                        description_en="Chicken eggs, 10 pcs",
+                        description_hy="Հավի ձու, 10 հատ"),
+                Product(name="Бананы", name_en="Bananas", name_hy="Բանան",
+                        price=430, stock=100,
+                        category="Фрукты", category_en="Fruits", category_hy="Մրգեր",
+                        description="Бананы, 1 кг",
+                        description_en="Bananas, 1 kg",
+                        description_hy="Բանան, 1 կգ"),
+                Product(name="Сыр Гауда", name_en="Gouda cheese", name_hy="Գաուդա պանիր",
+                        price=1250, stock=20,
+                        category="Сыры", category_en="Cheese", category_hy="Պանիրներ",
+                        description="Сыр гауда, 200 г",
+                        description_en="Gouda cheese, 200 g",
+                        description_hy="Գաուդա պանիր, 200 գ"),
             ]
             db.add_all(demo_products)
 

@@ -43,12 +43,21 @@ class LoginData(BaseModel):
 
 
 # ---------- PRODUCTS ----------
-class ProductBase(BaseModel):
+class ProductTranslations(BaseModel):
+    name_en: Optional[str] = None
+    name_hy: Optional[str] = None
+    description_en: Optional[str] = None
+    description_hy: Optional[str] = None
+    category_en: Optional[str] = None
+    category_hy: Optional[str] = None
+
+
+class ProductBase(ProductTranslations):
     name: str
     description: Optional[str] = None
-    price: float = Field(..., gt=0)
+    price: float = Field(..., gt=0)  # в армянских драмах (AMD)
     category: Optional[str] = None
-    stock: int = 0
+    stock: int = Field(0, ge=0)
     image_url: Optional[str] = None
     is_available: bool = True
 
@@ -57,12 +66,12 @@ class ProductCreate(ProductBase):
     pass
 
 
-class ProductUpdate(BaseModel):
+class ProductUpdate(ProductTranslations):
     name: Optional[str] = None
     description: Optional[str] = None
-    price: Optional[float] = None
+    price: Optional[float] = Field(None, gt=0)
     category: Optional[str] = None
-    stock: Optional[int] = None
+    stock: Optional[int] = Field(None, ge=0)
     image_url: Optional[str] = None
     is_available: Optional[bool] = None
 

@@ -1,5 +1,6 @@
 // Меняйте, если сервер на другом адресе
 const API = "";
+// Переводы, форматирование цен и дат — в i18n.js (подключается перед этим файлом)
 
 // ---------- Работа с токеном ----------
 const auth = {
@@ -15,10 +16,16 @@ async function api(path, options = {}) {
   if (!(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
+  headers["Accept-Language"] = LANG;   // сервер вернёт ошибки на этом языке
   const token = auth.getToken();
   if (token) headers["Authorization"] = "Bearer " + token;
 
-  const res = await fetch(API + path, { ...options, headers });
+  let res;
+  try {
+    res = await fetch(API + path, { ...options, headers });
+  } catch {
+    throw new Error(t("err.network"));
+  }
 
   if (res.status === 401) {
     auth.clear();
@@ -26,17 +33,16 @@ async function api(path, options = {}) {
     if (!location.pathname.includes("login")) {
       location.href = "/login.html";
     }
-    throw new Error("Требуется авторизация");
+    throw new Error(t("err.auth"));
   }
 
   if (res.status === 204) return null;
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const detail = Array.isArray(data.detail)
-      ? data.detail.map(d => d.msg).join("; ")   // ошибки валидации Pydantic
-      : data.detail;
-    throw new Error(detail || "Ошибка запроса");
+    // 422 — ошибка валидации Pydantic: её текст всегда на английском, показываем свой
+    const detail = Array.isArray(data.detail) ? t("err.validation") : data.detail;
+    throw new Error(detail || t("err.request"));
   }
   return data;
 }
@@ -46,23 +52,6 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   })[c]);
-}
-
-const _rub0 = new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 });
-const _rub2 = new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", minimumFractionDigits: 2 });
-
-// 45 → «45 ₽», 89.9 → «89,90 ₽»
-function fmtPrice(n) {
-  const v = Math.round(Number(n) * 100) / 100;
-  return (Number.isInteger(v) ? _rub0 : _rub2).format(v);
-}
-
-// plural(3, "товар", "товара", "товаров") → «товара»
-function plural(n, one, few, many) {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
-  return many;
 }
 
 // ---------- Тост-уведомления ----------
@@ -82,7 +71,17 @@ function toast(msg) {
 }
 
 // ---------- Корзина (в localStorage) ----------
-// Элемент: { id, name, price, qty, stock, category, image_url }
+// Элемент: { id, name, name_en, name_hy, price, qty, stock, category, image_url }
+function pickCartFields(p) {
+  return {
+    id: p.id,
+    name: p.name, name_en: p.name_en, name_hy: p.name_hy,
+    price: p.price,
+    stock: p.stock,
+    category: p.category,
+    image_url: p.image_url,
+  };
+}
 const cart = {
   key: "cart",
   get() {
@@ -105,15 +104,7 @@ const cart = {
       if (product.stock != null) found.stock = product.stock;
     } else {
       if (max <= 0) return false;
-      items.push({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        qty: 1,
-        stock: product.stock,
-        category: product.category,
-        image_url: product.image_url,
-      });
+      items.push({ ...pickCartFields(product), qty: 1 });
     }
     this.save(items);
     return true;
@@ -142,11 +133,7 @@ const cart = {
       if (!p || !p.is_available || p.stock <= 0) { changed = true; continue; }
       const qty = Math.min(i.qty, p.stock);
       if (qty !== i.qty || p.price !== i.price) changed = true;
-      next.push({
-        ...i, qty,
-        name: p.name, price: p.price, stock: p.stock,
-        category: p.category, image_url: p.image_url,
-      });
+      next.push({ ...i, ...pickCartFields(p), qty });
     }
     this.save(next);
     return changed;
@@ -174,14 +161,18 @@ async function renderHeader() {
   el.innerHTML = `
     <a href="/" class="logo"><h1>🛒 FastMarket</h1></a>
     <nav>
-      <a href="/">Каталог</a>
+      <a href="/" class="nav-catalog">${t("nav.catalog")}</a>
       ${loggedIn
-        ? `<a href="/orders.html">Мои заказы</a>
-           ${isAdmin ? `<a href="/admin.html">Админка</a>` : ""}
-           <a href="#" id="logout">Выйти</a>`
-        : `<a href="/login.html">Войти</a>`}
+        ? `<a href="/orders.html">${t("nav.orders")}</a>
+           ${isAdmin ? `<a href="/admin.html">${t("nav.admin")}</a>` : ""}
+           <a href="#" id="logout">${t("nav.logout")}</a>`
+        : `<a href="/login.html">${t("nav.login")}</a>`}
+      <select class="lang-switch" id="lang-switch" aria-label="${t("lang.label")}">
+        ${LANGS.map(l => `<option value="${l.code}" ${l.code === LANG ? "selected" : ""}>${l.short}</option>`).join("")}
+      </select>
     </nav>
   `;
+  document.getElementById("lang-switch").addEventListener("change", (e) => setLang(e.target.value));
 
   const logout = document.getElementById("logout");
   if (logout) {
@@ -193,4 +184,5 @@ async function renderHeader() {
   }
 }
 
+applyI18n();
 document.addEventListener("DOMContentLoaded", renderHeader);

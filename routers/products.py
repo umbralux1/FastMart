@@ -1,10 +1,11 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Product, User
 from schemas import ProductCreate, ProductOut, ProductUpdate
 from auth import get_current_admin
+from i18n import AppError
 from crud import create_product, update_product
 
 router = APIRouter(prefix="/products", tags=["Товары"])
@@ -29,10 +30,14 @@ def list_products(
 
     products = query.all()
 
-    # Поиск делаем в Python — учитывает регистр кириллицы
+    # Поиск делаем в Python — учитывает регистр кириллицы и армянского.
+    # Ищем по названию на всех трёх языках.
     if search:
         needle = search.strip().lower()
-        products = [p for p in products if needle in p.name.lower()]
+        products = [
+            p for p in products
+            if any(needle in (v or "").lower() for v in (p.name, p.name_en, p.name_hy))
+        ]
 
     return products[skip:skip + limit]
 
@@ -41,7 +46,7 @@ def list_products(
 def get_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
-        raise HTTPException(status_code=404, detail="Товар не найден")
+        raise AppError(404, "product.not_found")
     return product
 
 
@@ -72,7 +77,7 @@ def delete_product(
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
-        raise HTTPException(status_code=404, detail="Товар не найден")
+        raise AppError(404, "product.not_found")
     db.delete(product)
     db.commit()
     return None

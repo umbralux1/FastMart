@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from database import get_db
@@ -6,6 +6,7 @@ from schemas import UserCreate, UserOut, Token, UserUpdate
 from models import User
 from auth import verify_password, create_access_token, get_current_user, get_current_admin
 from crud import create_user
+from i18n import AppError
 from typing import List
 
 router = APIRouter(prefix="/users", tags=["Пользователи"])
@@ -20,7 +21,7 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Неверный логин или пароль")
+        raise AppError(401, "user.bad_credentials")
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
 
@@ -59,7 +60,7 @@ def make_admin(
 ):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
+        raise AppError(404, "user.not_found")
     user.is_admin = True
     db.commit()
     db.refresh(user)
