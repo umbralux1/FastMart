@@ -61,35 +61,43 @@ def normalize_am_phone(raw: str) -> str:
 
 def create_order(db: Session, user: User, data: OrderCreate) -> Order:
     phone = normalize_am_phone(data.phone)
+
+    # Складываем строки с одинаковым товаром: [5×15, 5×15] → {5: 30}.
+    # Иначе каждая строка сверяется с остатком отдельно и вместе превышают его.
+    quantities: dict[int, int] = {}
+    for item in data.items:
+        quantities[item.product_id] = quantities.get(item.product_id, 0) + item.quantity
+
     items_data = []
     total = 0.0
+    products = []
 
-    for item in data.items:
-        product = db.query(Product).filter(Product.id == item.product_id).first()
+    for product_id, quantity in quantities.items():
+        product = db.query(Product).filter(Product.id == product_id).first()
         if not product:
-            raise AppError(404, "product.not_found_id", id=item.product_id)
+            raise AppError(404, "product.not_found_id", id=product_id)
         if not product.is_available:
             raise AppError(400, "product.unavailable", name=localized_names(product))
-        if product.stock < item.quantity:
+        if product.stock < quantity:
             raise AppError(
                 400, "product.insufficient",
                 name=localized_names(product), stock=product.stock,
             )
-        line_total = product.price * item.quantity
+        line_total = product.price * quantity
         total += line_total
         items_data.append({
             "product_id": product.id,
             "name": product.name,
             "names": localized_names(product),  # чтобы история заказов была на любом языке
-            "quantity": item.quantity,
+            "quantity": quantity,
             "price": product.price,
             "line_total": line_total,
         })
+        products.append((product, quantity))
 
-    # Уменьшаем остатки
-    for item in data.items:
-        product = db.query(Product).filter(Product.id == item.product_id).first()
-        product.stock -= item.quantity
+    # Уменьшаем остатки — только после того, как проверены все товары
+    for product, quantity in products:
+        product.stock -= quantity
 
     order = Order(
         user_id=user.id,
@@ -106,3 +114,4 @@ def create_order(db: Session, user: User, data: OrderCreate) -> Order:
     db.commit()
     db.refresh(order)
     return order
+
