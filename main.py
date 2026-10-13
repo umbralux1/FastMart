@@ -13,8 +13,8 @@ import os
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="FastMart API",
-    description="Каталог продуктов и заказы для FastMart",
+    title="FastMarket API",
+    description="Каталог продуктов и заказы для FastMarket",
     version="1.0.0",
 )
 
@@ -25,6 +25,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Браузер всегда сверяется с сервером, не изменился ли файл (если нет — короткий ответ 304).
+# Вместе с ?v=N у CSS/JS это не даёт Safari и другим браузерам показывать старую версию сайта.
+@app.middleware("http")
+async def no_cache(request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("Cache-Control", "no-cache")
+    return response
+
 
 app.include_router(users.router)
 app.include_router(products.router)
@@ -72,7 +81,7 @@ def root():
     index = os.path.join("static", "index.html")
     if os.path.isfile(index):
         return FileResponse(index)
-    return {"message": "FastMart API работает", "docs": "/docs"}
+    return {"message": "FastMarket API работает", "docs": "/docs"}
 
 
 @app.get("/admin", include_in_schema=False)
