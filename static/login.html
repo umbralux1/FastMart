@@ -2,7 +2,9 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Вход — FastMart </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#16a34a">
+  <title>Вход — FastMart</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -13,14 +15,14 @@
     <div id="msg" class="msg"></div>
 
     <form id="form">
-      <input type="text"     id="username" placeholder="Имя пользователя" required>
-      <input type="password" id="password" placeholder="Пароль" required>
+      <input type="text"     id="username" autocomplete="username" placeholder="Имя пользователя" required>
+      <input type="password" id="password" autocomplete="current-password" placeholder="Пароль" required>
 
       <div id="register-fields" style="display:none">
-        <input type="email" id="email" placeholder="Email">
-        <input type="text"  id="full_name" placeholder="ФИО (необязательно)">
-        <input type="text"  id="phone" placeholder="Телефон (необязательно)">
-        <input type="text"  id="address" placeholder="Адрес доставки (необязательно)">
+        <input type="email" id="email" autocomplete="email" placeholder="Email">
+        <input type="text"  id="full_name" autocomplete="name" placeholder="ФИО (необязательно)">
+        <input type="tel"   id="phone" autocomplete="tel" placeholder="Телефон (необязательно)">
+        <input type="text"  id="address" autocomplete="street-address" placeholder="Адрес доставки (необязательно)">
       </div>
 
       <button type="submit" id="submitBtn">Войти</button>
@@ -58,6 +60,7 @@
       $("register-fields").style.display = isReg ? "block" : "none";
 
       $("email").required = isReg;
+      $("password").autocomplete = isReg ? "new-password" : "current-password";
     });
 
     $("form").addEventListener("submit", async (e) => {

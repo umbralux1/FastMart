@@ -2,7 +2,9 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Админка — FastMart </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#16a34a">
+  <title>Админка — FastMart</title>
   <link rel="stylesheet" href="/style.css">
   <style>
     .tabs {
@@ -113,6 +115,13 @@
       gap: 8px;
       justify-content: flex-end;
       margin-top: 8px;
+    }
+
+    @media (max-width: 700px) {
+      .tabs { overflow-x: auto; }
+      .tabs button { flex: none; padding: 10px 14px; }
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+      .row-title { flex-wrap: wrap; gap: 8px; }
     }
 
     .status-select {
@@ -281,7 +290,7 @@
           <td>${p.id}</td>
           <td>${escapeHtml(p.name)}</td>
           <td>${escapeHtml(p.category || "—")}</td>
-          <td>${p.price.toFixed(2)} ₽</td>
+          <td>${fmtPrice(p.price)}</td>
           <td>${p.stock}</td>
           <td>
             <span class="badge ${p.is_available ? "delivered" : "cancelled"}">
@@ -412,7 +421,7 @@
         tr.innerHTML = `
           <td>#${o.id}</td>
           <td>user #${o.user_id}</td>
-          <td>${o.total_price.toFixed(2)} ₽</td>
+          <td>${fmtPrice(o.total_price)}</td>
           <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
             ${escapeHtml(o.delivery_address)}
           </td>
@@ -446,7 +455,7 @@
       let items = [];
       try { items = JSON.parse(o.items_json); } catch {}
       const list = items.map(i =>
-        `<li>${escapeHtml(i.name)} × ${i.quantity} — ${i.line_total.toFixed(2)} ₽</li>`
+        `<li>${escapeHtml(i.name)} × ${i.quantity} — ${fmtPrice(i.line_total)}</li>`
       ).join("");
 
       const bg = document.createElement("div");
@@ -461,7 +470,7 @@
           ${o.comment ? `<p style="margin-bottom:10px"><b>Комментарий:</b> ${escapeHtml(o.comment)}</p>` : ""}
           <p style="margin-bottom:6px"><b>Состав:</b></p>
           <ul style="margin-left:20px;margin-bottom:12px">${list}</ul>
-          <p style="font-size:18px;font-weight:700;text-align:right">Итого: ${o.total_price.toFixed(2)} ₽</p>
+          <p style="font-size:18px;font-weight:700;text-align:right">Итого: ${fmtPrice(o.total_price)}</p>
           <div class="modal-actions">
             <button class="secondary" id="close">Закрыть</button>
           </div>
