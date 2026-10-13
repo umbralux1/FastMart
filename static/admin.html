@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16a34a">
   <title>FastMarket</title>
-  <link rel="stylesheet" href="/style.css?v=4">
+  <link rel="stylesheet" href="/style.css?v=5">
   <style>
     .tabs {
       display: flex;
@@ -227,8 +227,8 @@
     </div>
   </div>
 
-  <script src="/i18n.js?v=4"></script>
-  <script src="/app.js?v=4"></script>
+  <script src="/i18n.js?v=5"></script>
+  <script src="/app.js?v=5"></script>
   <script>
     const $ = (id) => document.getElementById(id);
 
@@ -461,6 +461,7 @@
           <td>${fmtPrice(o.total_price)}</td>
           <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
             ${escapeHtml(o.delivery_address)}
+            ${o.phone ? `<div class="muted"><a href="tel:${escapeHtml(o.phone)}">${escapeHtml(formatAmPhone(o.phone))}</a></div>` : ""}
           </td>
           <td>
             <select class="status-select" data-id="${o.id}">${options}</select>
@@ -504,9 +505,12 @@
             <span class="badge ${o.status}">${statusLabel(o.status)}</span>
           </p>
           <p style="margin-bottom:10px"><b>${t("admin.f_address")}:</b> ${escapeHtml(o.delivery_address)}</p>
+          ${o.phone ? `<p style="margin-bottom:10px"><b>${t("admin.f_phone")}:</b> <a href="tel:${escapeHtml(o.phone)}">${escapeHtml(formatAmPhone(o.phone))}</a></p>` : ""}
+          ${o.payment_method ? `<p style="margin-bottom:10px"><b>${t("admin.f_payment")}:</b> ${t("pay." + o.payment_method)}</p>` : ""}
           ${o.comment ? `<p style="margin-bottom:10px"><b>${t("admin.f_comment")}:</b> ${escapeHtml(o.comment)}</p>` : ""}
           <p style="margin-bottom:6px"><b>${t("admin.f_items")}:</b></p>
           <ul style="margin-left:20px;margin-bottom:12px">${list}</ul>
+          ${o.delivery_fee ? `<p style="text-align:right;color:var(--muted)">${t("admin.f_subtotal")}: ${fmtPrice(o.total_price - o.delivery_fee)}<br>${t("admin.f_delivery")}: ${fmtPrice(o.delivery_fee)}</p>` : ""}
           <p style="font-size:18px;font-weight:700;text-align:right">${t("admin.total")}: ${fmtPrice(o.total_price)}</p>
           <div class="modal-actions">
             <button class="secondary" id="close">${t("admin.close")}</button>

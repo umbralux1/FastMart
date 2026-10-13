@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#16a34a">
   <title>FastMarket</title>
-  <link rel="stylesheet" href="/style.css?v=4">
+  <link rel="stylesheet" href="/style.css?v=5">
 </head>
 <body>
   <header id="header"></header>
@@ -32,6 +32,8 @@
         </div>
       </div>
 
+      <div class="eta" id="cart-eta"></div>
+
       <div class="cart-empty" id="cart-empty">
         <div class="big">🧺</div>
         <div data-i18n-html="cart.empty"></div>
@@ -39,6 +41,8 @@
       <div class="cart-items" id="cart-items"></div>
 
       <div class="cart-foot" id="cart-foot" hidden>
+        <div class="cart-line"><span data-i18n="cart.subtotal"></span><span id="cart-subtotal"></span></div>
+        <div class="cart-line"><span data-i18n="cart.delivery"></span><span id="cart-delivery"></span></div>
         <div class="cart-total"><span data-i18n="cart.total"></span><span id="cart-total"></span></div>
         <button class="checkout" id="checkout" data-i18n="cart.checkout"></button>
       </div>
@@ -54,15 +58,34 @@
 
   <!-- Оформление заказа -->
   <dialog class="sheet" id="checkout-dialog" aria-labelledby="checkout-title">
-    <form id="checkout-form">
+    <form id="checkout-form" novalidate>
       <h3 id="checkout-title" data-i18n="checkout.title"></h3>
 
       <div class="field">
         <label for="addr" data-i18n="checkout.address"></label>
         <textarea id="addr" rows="2" required minlength="5" maxlength="500"
-                  autocomplete="street-address" data-i18n-ph="checkout.address_ph"></textarea>
+                  autocomplete="street-address" data-i18n-ph="checkout.address_ph" aria-describedby="addr-err"></textarea>
+        <div class="field-err" id="addr-err" hidden data-i18n="checkout.address_bad"></div>
+      </div>
+
+      <div class="field">
+        <label for="phone" data-i18n="checkout.phone"></label>
+        <div class="phone-input">
+          <span class="phone-prefix" aria-hidden="true">+374</span>
+          <input id="phone" type="tel" inputmode="tel" autocomplete="tel-national"
+                 placeholder="__ ___ ___" aria-describedby="phone-err">
+        </div>
+        <div class="field-err" id="phone-err" hidden data-i18n="checkout.phone_bad"></div>
         <label class="check"><input type="checkbox" id="save-addr" checked> <span data-i18n="checkout.save_addr"></span></label>
       </div>
+
+      <fieldset class="field pay">
+        <legend data-i18n="checkout.payment"></legend>
+        <div class="pay-options">
+          <label class="pay-option"><input type="radio" name="pay" value="cash" checked> <span data-i18n="pay.cash"></span></label>
+          <label class="pay-option"><input type="radio" name="pay" value="card"> <span data-i18n="pay.card"></span></label>
+        </div>
+      </fieldset>
 
       <div class="field">
         <label for="comment"><span data-i18n="checkout.comment"></span> <span style="font-weight:400;color:var(--muted)" data-i18n="checkout.optional"></span></label>
@@ -78,15 +101,22 @@
     </form>
   </dialog>
 
-  <script src="/i18n.js?v=4"></script>
-  <script src="/app.js?v=4"></script>
+  <script src="/i18n.js?v=5"></script>
+  <script src="/app.js?v=5"></script>
   <script>
     const $ = (id) => document.getElementById(id);
 
     let products = [];        // текущая выдача (с фильтрами)
     const byId = new Map();   // все известные товары по id
     let activeCat = "";
-    let profileAddress = null;
+    let profile = null;       // { address, phone } из профиля — для подстановки в форму
+
+    // Настройки магазина (стоимость доставки и т. п.) — с сервера, с запасным значением
+    let SHOP = { delivery_fee: 300, delivery_minutes: 15 };
+    fetch("/config").then(r => r.ok ? r.json() : null).then(c => {
+      if (c) { SHOP = c; renderCart(); }
+    }).catch(() => {});
+    const orderTotal = () => cart.total() + SHOP.delivery_fee;
     let reqSeq = 0;
 
     // ---------- Заглушки картинок ----------
@@ -252,7 +282,10 @@
       $("cart-empty").hidden = has;
       $("cart-foot").hidden = !has;
       $("clear-cart").hidden = !has;
-      $("cart-total").textContent = fmtPrice(total);
+      $("cart-eta").textContent = t("cart.eta", { min: SHOP.delivery_minutes });
+      $("cart-subtotal").textContent = fmtPrice(total);
+      $("cart-delivery").textContent = fmtPrice(SHOP.delivery_fee);
+      $("cart-total").textContent = fmtPrice(orderTotal());
 
       $("cart-bar").hidden = !has;
       $("cart-bar-count").textContent = `${count} ${tp("cart.items", count)}`;
@@ -302,8 +335,10 @@
             <span>${escapeHtml(loc(i, "name"))} × ${i.qty}</span>
             <span>${fmtPrice(i.price * i.qty)}</span>
           </div>`).join("") +
-        `<div class="row total"><span>${t("cart.total")}</span><span>${fmtPrice(total)}</span></div>`;
-      $("place-order").textContent = t("checkout.place", { sum: fmtPrice(total) });
+        `<div class="row subtotal"><span>${t("cart.subtotal")}</span><span>${fmtPrice(total)}</span></div>` +
+        `<div class="row"><span>${t("cart.delivery")}</span><span>${fmtPrice(SHOP.delivery_fee)}</span></div>` +
+        `<div class="row total"><span>${t("cart.total")}</span><span>${fmtPrice(orderTotal())}</span></div>`;
+      $("place-order").textContent = t("checkout.place", { sum: fmtPrice(orderTotal()) });
     }
 
     $("checkout").addEventListener("click", async () => {
@@ -315,21 +350,51 @@
       closeSheet();
       renderSummary();
 
-      if (profileAddress === null) {
+      if (profile === null) {
         try {
           const me = await api("/users/me");
-          profileAddress = me.address || "";
-        } catch { profileAddress = ""; }
+          profile = { address: me.address || "", phone: formatAmLocal(me.phone) };
+        } catch { profile = { address: "", phone: "" }; }
       }
-      if (!$("addr").value) $("addr").value = profileAddress;
-      $("save-addr").checked = !profileAddress;   // предлагаем запомнить, если адреса ещё нет
+      if (!$("addr").value) $("addr").value = profile.address;
+      if (!$("phone").value) $("phone").value = profile.phone;
+      updateSaveCheckbox();
 
       dlg.showModal();
-      if (!$("addr").value && !mobile.matches) $("addr").focus();
+      if (!mobile.matches) {
+        if (!$("addr").value) $("addr").focus();
+        else if (!$("phone").value) $("phone").focus();
+      }
     });
 
-    $("addr").addEventListener("input", () => {
-      $("save-addr").checked = $("addr").value.trim() !== profileAddress;
+    // Предлагаем запомнить, если адрес или телефон отличаются от профиля
+    function updateSaveCheckbox() {
+      $("save-addr").checked =
+        $("addr").value.trim() !== profile.address ||
+        amPhoneDigits($("phone").value) !== amPhoneDigits(profile.phone);
+    }
+    $("addr").addEventListener("input", updateSaveCheckbox);
+
+    // Маска телефона: [+374] 91 234 567
+    // Свои сообщения об ошибках вместо всплывашек браузера: те — на языке браузера, а не сайта
+    function showFieldError(id, show) {
+      $(id + "-err").hidden = !show;
+      $(id).classList.toggle("invalid", show);
+      $(id).setAttribute("aria-invalid", show);
+    }
+    const showPhoneError = (show) => showFieldError("phone", show);
+    const addressOk = () => $("addr").value.trim().length >= 5;
+    $("addr").addEventListener("input", () => { if (addressOk()) showFieldError("addr", false); });
+    // Поле принимает что угодно: «91234567», «091 23 45 67», вставленное «+374 91 234567»
+    $("phone").addEventListener("input", () => {
+      const el = $("phone");
+      el.value = formatAmLocal(el.value);
+      if (isValidAmPhone(el.value)) showPhoneError(false);
+      updateSaveCheckbox();
+    });
+    $("phone").addEventListener("blur", () => {
+      const v = $("phone").value;
+      if (amPhoneDigits(v)) showPhoneError(!isValidAmPhone(v));
     });
 
     $("checkout-cancel").addEventListener("click", () => dlg.close());
@@ -342,6 +407,17 @@
       const items = cart.get().map(i => ({ product_id: i.id, quantity: i.qty }));
       if (!items.length) { dlg.close(); return; }
 
+      const badAddr = !addressOk();
+      const badPhone = !isValidAmPhone($("phone").value);
+      showFieldError("addr", badAddr);
+      showPhoneError(badPhone);
+      if (badAddr || badPhone) {
+        $(badAddr ? "addr" : "phone").focus();
+        return;
+      }
+      const phone = "+374" + amPhoneDigits($("phone").value);
+      const payment_method = dlg.querySelector('input[name="pay"]:checked').value;
+
       const btn = $("place-order");
       btn.disabled = true;
       btn.textContent = t("checkout.placing");
@@ -349,11 +425,11 @@
       try {
         await api("/orders/", {
           method: "POST",
-          body: JSON.stringify({ items, delivery_address: address, comment }),
+          body: JSON.stringify({ items, delivery_address: address, phone, payment_method, comment }),
         });
 
-        if ($("save-addr").checked && address !== profileAddress) {
-          api("/users/me", { method: "PATCH", body: JSON.stringify({ address }) }).catch(() => {});
+        if ($("save-addr").checked) {
+          api("/users/me", { method: "PATCH", body: JSON.stringify({ address, phone }) }).catch(() => {});
         }
 
         cart.clear();

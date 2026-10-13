@@ -62,7 +62,7 @@ const I18N = {
     "checkout.title": "Оформление заказа",
     "checkout.address": "Адрес доставки",
     "checkout.address_ph": "Улица, дом, квартира, подъезд",
-    "checkout.save_addr": "Запомнить адрес",
+    "checkout.save_addr": "Запомнить адрес и телефон",
     "checkout.comment": "Комментарий курьеру",
     "checkout.optional": "— необязательно",
     "checkout.comment_ph": "Например: домофон не работает, позвоните",
@@ -71,6 +71,15 @@ const I18N = {
     "checkout.placing": "Оформляем…",
     "checkout.login_first": "Войдите, чтобы оформить заказ",
     "checkout.done": "Заказ оформлен! 🎉",
+    "checkout.phone": "Телефон для курьера",
+    "checkout.phone_bad": "Введите номер: +374 и 8 цифр",
+    "checkout.address_bad": "Укажите адрес доставки",
+    "checkout.payment": "Оплата",
+    "pay.cash": "💵 Наличными курьеру",
+    "pay.card": "💳 Картой курьеру",
+    "cart.subtotal": "Товары",
+    "cart.delivery": "Доставка",
+    "cart.eta": "⚡ Привезём за ~{min} минут",
 
     // Мои заказы
     "orders.title": "Мои заказы",
@@ -83,6 +92,9 @@ const I18N = {
     "orders.cancel": "Отменить",
     "orders.cancel_confirm": "Отменить заказ №{id}?",
     "orders.cancelled": "Заказ отменён",
+    "orders.phone": "Телефон",
+    "orders.payment": "Оплата",
+    "orders.delivery": "Доставка",
 
     // Вход
     "login.title": "Вход",
@@ -160,6 +172,10 @@ const I18N = {
     "admin.f_address": "Адрес",
     "admin.f_comment": "Комментарий",
     "admin.f_items": "Состав",
+    "admin.f_phone": "Телефон",
+    "admin.f_payment": "Оплата",
+    "admin.f_delivery": "Доставка",
+    "admin.f_subtotal": "Товары",
     "admin.total": "Итого",
     "admin.close": "Закрыть",
     "admin.role_admin": "Админ",
@@ -220,7 +236,7 @@ const I18N = {
     "checkout.title": "Checkout",
     "checkout.address": "Delivery address",
     "checkout.address_ph": "Street, building, apartment, entrance",
-    "checkout.save_addr": "Remember this address",
+    "checkout.save_addr": "Remember address and phone",
     "checkout.comment": "Note for the courier",
     "checkout.optional": "— optional",
     "checkout.comment_ph": "E.g. the intercom is broken, please call",
@@ -229,6 +245,15 @@ const I18N = {
     "checkout.placing": "Placing order…",
     "checkout.login_first": "Sign in to place an order",
     "checkout.done": "Order placed! 🎉",
+    "checkout.phone": "Phone for the courier",
+    "checkout.phone_bad": "Enter a number: +374 and 8 digits",
+    "checkout.address_bad": "Enter the delivery address",
+    "checkout.payment": "Payment",
+    "pay.cash": "💵 Cash to courier",
+    "pay.card": "💳 Card to courier",
+    "cart.subtotal": "Items",
+    "cart.delivery": "Delivery",
+    "cart.eta": "⚡ Delivered in ~{min} minutes",
 
     "orders.title": "My orders",
     "orders.empty": "You have no orders yet.",
@@ -240,6 +265,9 @@ const I18N = {
     "orders.cancel": "Cancel",
     "orders.cancel_confirm": "Cancel order #{id}?",
     "orders.cancelled": "Order cancelled",
+    "orders.phone": "Phone",
+    "orders.payment": "Payment",
+    "orders.delivery": "Delivery",
 
     "login.title": "Sign in",
     "login.register_title": "Create account",
@@ -315,6 +343,10 @@ const I18N = {
     "admin.f_address": "Address",
     "admin.f_comment": "Note",
     "admin.f_items": "Items",
+    "admin.f_phone": "Phone",
+    "admin.f_payment": "Payment",
+    "admin.f_delivery": "Delivery",
+    "admin.f_subtotal": "Items",
     "admin.total": "Total",
     "admin.close": "Close",
     "admin.role_admin": "Admin",
@@ -375,7 +407,7 @@ const I18N = {
     "checkout.title": "Պատվերի ձևակերպում",
     "checkout.address": "Առաքման հասցե",
     "checkout.address_ph": "Փողոց, շենք, բնակարան, մուտք",
-    "checkout.save_addr": "Հիշել հասցեն",
+    "checkout.save_addr": "Հիշել հասցեն և հեռախոսը",
     "checkout.comment": "Մեկնաբանություն առաքիչի համար",
     "checkout.optional": "— ըստ ցանկության",
     "checkout.comment_ph": "Օրինակ՝ դոմոֆոնը չի աշխատում, զանգահարեք",
@@ -384,6 +416,15 @@ const I18N = {
     "checkout.placing": "Ձևակերպում ենք…",
     "checkout.login_first": "Պատվիրելու համար մուտք գործեք",
     "checkout.done": "Պատվերն ընդունված է 🎉",
+    "checkout.phone": "Հեռախոս առաքիչի համար",
+    "checkout.phone_bad": "Մուտքագրեք համարը՝ +374 և 8 թվանշան",
+    "checkout.address_bad": "Նշեք առաքման հասցեն",
+    "checkout.payment": "Վճարում",
+    "pay.cash": "💵 Կանխիկ՝ առաքիչին",
+    "pay.card": "💳 Քարտով՝ առաքիչին",
+    "cart.subtotal": "Ապրանքներ",
+    "cart.delivery": "Առաքում",
+    "cart.eta": "⚡ Կառաքենք ~{min} րոպեում",
 
     "orders.title": "Իմ պատվերները",
     "orders.empty": "Դուք դեռ պատվերներ չունեք։",
@@ -395,6 +436,9 @@ const I18N = {
     "orders.cancel": "Չեղարկել",
     "orders.cancel_confirm": "Չեղարկե՞լ №{id} պատվերը",
     "orders.cancelled": "Պատվերը չեղարկված է",
+    "orders.phone": "Հեռախոս",
+    "orders.payment": "Վճարում",
+    "orders.delivery": "Առաքում",
 
     "login.title": "Մուտք",
     "login.register_title": "Գրանցում",
@@ -470,6 +514,10 @@ const I18N = {
     "admin.f_address": "Հասցե",
     "admin.f_comment": "Մեկնաբանություն",
     "admin.f_items": "Կազմը",
+    "admin.f_phone": "Հեռախոս",
+    "admin.f_payment": "Վճարում",
+    "admin.f_delivery": "Առաքում",
+    "admin.f_subtotal": "Ապրանքներ",
     "admin.total": "Ընդամենը",
     "admin.close": "Փակել",
     "admin.role_admin": "Ադմին",
@@ -557,4 +605,26 @@ function applyI18n(root = document) {
   root.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
   const titleKey = document.documentElement.dataset.title;
   if (titleKey) document.title = `${t(titleKey)} — FastMarket`;
+}
+
+// ---------- Телефон (Армения) ----------
+// Любой ввод → 8 цифр абонента: "+374 91 234567", "091234567", "91234567" → "91234567"
+function amPhoneDigits(raw) {
+  let d = String(raw || "").replace(/\D/g, "");
+  if (d.length > 8 && d.startsWith("374")) d = d.slice(3);  // код страны
+  d = d.replace(/^0+/, "");   // местный формат 0XX… (номер абонента с нуля не начинается)
+  return d.slice(0, 8);
+}
+// "91234567" → "91 234 567" — для поля ввода (префикс +374 стоит рядом с полем)
+function formatAmLocal(raw) {
+  const d = amPhoneDigits(raw);
+  return [d.slice(0, 2), d.slice(2, 5), d.slice(5, 8)].filter(Boolean).join(" ");
+}
+// "+37491234567" → "+374 91 234 567" — для показа
+function formatAmPhone(raw) {
+  const local = formatAmLocal(raw);
+  return local ? "+374 " + local : "";
+}
+function isValidAmPhone(raw) {
+  return amPhoneDigits(raw).length === 8;
 }

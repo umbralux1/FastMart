@@ -23,11 +23,16 @@ def get_db():
 # Колонки, добавленные после первого релиза. create_all() не меняет уже
 # существующие таблицы, поэтому досоздаём их сами (работает и в SQLite, и в Postgres).
 _ADDED_COLUMNS = {
-    "products": [
-        "name_en", "name_hy",
-        "description_en", "description_hy",
-        "category_en", "category_hy",
-    ],
+    "products": {
+        "name_en": "TEXT", "name_hy": "TEXT",
+        "description_en": "TEXT", "description_hy": "TEXT",
+        "category_en": "TEXT", "category_hy": "TEXT",
+    },
+    "orders": {
+        "phone": "TEXT",
+        "payment_method": "TEXT DEFAULT 'cash'",
+        "delivery_fee": "FLOAT DEFAULT 0",
+    },
 }
 
 
@@ -41,6 +46,6 @@ def ensure_columns():
             if table not in tables:
                 continue
             existing = {c["name"] for c in insp.get_columns(table)}
-            for col in columns:
+            for col, sql_type in columns.items():
                 if col not in existing:
-                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} TEXT"))
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {sql_type}"))

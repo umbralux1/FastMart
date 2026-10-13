@@ -76,6 +76,11 @@ MESSAGES = {
         "en": "The order can't be cancelled at this stage",
         "hy": "Այս կարգավիճակում պատվերը հնարավոր չէ չեղարկել",
     },
+    "order.bad_phone": {
+        "ru": "Укажите армянский номер телефона: +374 и 8 цифр",
+        "en": "Enter an Armenian phone number: +374 and 8 digits",
+        "hy": "Նշեք հայկական հեռախոսահամար՝ +374 և 8 թվանշան",
+    },
     "order.bad_status": {
         "ru": "Недопустимый статус. Разрешено: {allowed}",
         "en": "Invalid status. Allowed: {allowed}",

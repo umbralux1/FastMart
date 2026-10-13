@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import Base, engine, SessionLocal, ensure_columns
 from i18n import AppError, app_error_handler
+import settings
 from models import User, Product
 from auth import hash_password
 from routers import users, products, orders
@@ -101,6 +102,18 @@ def seed_data():
         db.commit()
     finally:
         db.close()
+
+
+@app.get("/config", tags=["Магазин"])
+def shop_config():
+    """Публичные настройки магазина: доставка, валюта, способы оплаты."""
+    return {
+        "currency": settings.CURRENCY,
+        "delivery_fee": settings.DELIVERY_FEE,
+        "delivery_minutes": settings.DELIVERY_MINUTES,
+        "min_order_amount": settings.MIN_ORDER_AMOUNT,
+        "payment_methods": list(settings.PAYMENT_METHODS),
+    }
 
 
 @app.get("/", include_in_schema=False)

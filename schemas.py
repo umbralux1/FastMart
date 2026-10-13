@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 
 
@@ -91,9 +91,11 @@ class OrderItem(BaseModel):
 
 
 class OrderCreate(BaseModel):
-    items: List[OrderItem]
-    delivery_address: str
-    comment: Optional[str] = None
+    items: List[OrderItem] = Field(..., min_length=1)
+    delivery_address: str = Field(..., min_length=5, max_length=500)
+    phone: str = Field(..., max_length=32)  # проверяется и нормализуется в crud.normalize_am_phone
+    payment_method: Literal["cash", "card"] = "cash"
+    comment: Optional[str] = Field(None, max_length=1000)
 
 
 class OrderOut(BaseModel):
@@ -102,6 +104,9 @@ class OrderOut(BaseModel):
     status: str
     total_price: float
     delivery_address: str
+    phone: Optional[str] = None
+    payment_method: Optional[str] = "cash"
+    delivery_fee: Optional[float] = 0
     items_json: str
     comment: Optional[str]
     created_at: datetime

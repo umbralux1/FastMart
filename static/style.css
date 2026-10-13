@@ -412,6 +412,24 @@ button.icon:hover { background: var(--border); }
   border-top: 1px solid var(--border);
 }
 
+.eta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin: 6px 0 4px;
+}
+
+.cart-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
 .cart-total {
   display: flex;
   justify-content: space-between;
@@ -466,6 +484,44 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.4); }
 }
 .field input:focus, .field textarea:focus { border-color: var(--accent); }
 
+.field input.invalid, .field textarea.invalid { border-color: var(--danger); }
+.phone-input { position: relative; }
+.phone-input .phone-prefix {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--text-2);
+  pointer-events: none;
+}
+.field .phone-input input { padding-left: 58px; letter-spacing: 0.3px; }
+.field-err { color: var(--danger); font-size: 13px; margin-top: 6px; }
+
+fieldset.pay { border: none; padding: 0; margin: 0; min-width: 0; }
+fieldset.pay legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  padding: 0;
+}
+.pay-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pay-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 11px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1.25;
+}
+.field .pay-option input { accent-color: var(--accent); flex: none; width: 18px; height: 18px; padding: 0; margin: 0; }
+.pay-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+@media (max-width: 380px) { .pay-options { grid-template-columns: 1fr; } }
+
 .check {
   display: flex;
   gap: 8px;
@@ -493,6 +549,11 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.4); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.summary .row.subtotal {
+  border-top: 1px solid var(--border-strong);
+  margin-top: 6px;
+  padding-top: 8px;
 }
 .summary .row.total {
   border-top: 1px solid var(--border-strong);

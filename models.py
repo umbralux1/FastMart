@@ -50,6 +50,9 @@ class Order(Base):
     status = Column(String, default="pending")  # pending, confirmed, delivering, delivered, cancelled
     total_price = Column(Float, default=0.0)
     delivery_address = Column(Text, nullable=False)
+    phone = Column(String, nullable=True)            # +374XXXXXXXX; у старых заказов пусто
+    payment_method = Column(String, default="cash")  # cash | card (курьеру)
+    delivery_fee = Column(Float, default=0.0)        # входит в total_price
     items_json = Column(Text, nullable=False)  # JSON: [{"product_id": 1, "quantity": 2, "price": 99.9}]
     comment = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

@@ -1,6 +1,8 @@
 import json
 from sqlalchemy.orm import Session
+import re
 from i18n import AppError, localized_names
+from settings import DELIVERY_FEE
 from models import User, Product, Order
 from schemas import UserCreate, ProductCreate, ProductUpdate, OrderCreate
 from auth import hash_password
@@ -45,7 +47,20 @@ def update_product(db: Session, product_id: int, data: ProductUpdate) -> Product
 
 
 # ---------- ORDERS ----------
+def normalize_am_phone(raw: str) -> str:
+    """'+374 91 234567', '091234567', '91 23 45 67' → '+37491234567'. Иначе — ошибка 400."""
+    digits = re.sub(r"\D", "", raw or "")
+    if digits.startswith("374") and len(digits) == 11:
+        digits = digits[3:]
+    elif digits.startswith("0") and len(digits) == 9:
+        digits = digits[1:]
+    if len(digits) != 8:
+        raise AppError(400, "order.bad_phone")
+    return "+374" + digits
+
+
 def create_order(db: Session, user: User, data: OrderCreate) -> Order:
+    phone = normalize_am_phone(data.phone)
     items_data = []
     total = 0.0
 
@@ -78,7 +93,10 @@ def create_order(db: Session, user: User, data: OrderCreate) -> Order:
 
     order = Order(
         user_id=user.id,
-        total_price=round(total, 2),
+        total_price=round(total + DELIVERY_FEE, 2),  # товары + доставка
+        delivery_fee=DELIVERY_FEE,
+        phone=phone,
+        payment_method=data.payment_method,
         delivery_address=data.delivery_address,
         items_json=json.dumps(items_data, ensure_ascii=False),
         comment=data.comment,
