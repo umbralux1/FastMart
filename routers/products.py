@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Product, User
@@ -7,6 +7,7 @@ from schemas import ProductCreate, ProductOut, ProductUpdate
 from auth import get_current_admin
 from i18n import AppError
 from crud import create_product, update_product
+from images import save_product_image, remove_product_image, MAX_IMAGE_BYTES
 
 router = APIRouter(prefix="/products", tags=["Товары"])
 
@@ -78,6 +79,42 @@ def delete_product(
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise AppError(404, "product.not_found")
+    remove_product_image(product)
     db.delete(product)
     db.commit()
     return None
+
+
+# ---------- Фото товара ----------
+@router.post("/{product_id}/image", response_model=ProductOut)
+def upload_product_image(
+    product_id: int,
+    file: UploadFile = File(..., description="JPG, PNG или WebP, до 3 МБ"),
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    """Загрузить или заменить фото. Файл сохраняется в static/img/products/."""
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise AppError(404, "product.not_found")
+    data = file.file.read(MAX_IMAGE_BYTES + 1)
+    product.image_url = save_product_image(product, data)
+    db.commit()
+    db.refresh(product)
+    return product
+
+
+@router.delete("/{product_id}/image", response_model=ProductOut)
+def delete_product_image(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_admin),
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise AppError(404, "product.not_found")
+    remove_product_image(product)
+    product.image_url = None
+    db.commit()
+    db.refresh(product)
+    return product

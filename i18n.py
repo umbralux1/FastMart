@@ -61,6 +61,16 @@ MESSAGES = {
         "en": "Not enough “{name}” in stock. Available: {stock}",
         "hy": "«{name}» ապրանքը բավարար չէ։ Առկա է՝ {stock}",
     },
+    "product.image_bad_type": {
+        "ru": "Нужна картинка в формате JPG, PNG или WebP",
+        "en": "Please upload a JPG, PNG or WebP image",
+        "hy": "Անհրաժեշտ է JPG, PNG կամ WebP ձևաչափի նկար",
+    },
+    "product.image_too_big": {
+        "ru": "Файл слишком большой (максимум {mb} МБ)",
+        "en": "The file is too large (max {mb} MB)",
+        "hy": "Ֆայլը չափազանց մեծ է (առավելագույնը {mb} ՄԲ)",
+    },
     "order.not_found": {
         "ru": "Заказ не найден",
         "en": "Order not found",

@@ -54,6 +54,25 @@ function escapeHtml(s) {
   })[c]);
 }
 
+// ---------- Фото товара или эмодзи-заглушка ----------
+// Категорию сравниваем по русскому названию (основное поле category)
+const CAT_EMOJI = [
+  [/молоч|молок|кефир|йогурт/i, "🥛"], [/хлеб|выпеч/i, "🍞"], [/яйц/i, "🥚"],
+  [/фрукт|ягод/i, "🍎"], [/овощ|зелен/i, "🥕"], [/сыр/i, "🧀"],
+  [/мяс|птиц|колбас/i, "🥩"], [/рыб|море/i, "🐟"], [/напит|сок|вод/i, "🧃"],
+  [/слад|конфет|шокол|десерт/i, "🍫"], [/круп|макар/i, "🌾"], [/заморож/i, "🧊"],
+];
+function emojiFor(cat) {
+  const hit = CAT_EMOJI.find(([re]) => re.test(cat || ""));
+  return hit ? hit[1] : "🛒";
+}
+function thumbHtml(p) {
+  const e = emojiFor(p.category);
+  if (!p.image_url) return e;
+  return `<img src="${escapeHtml(p.image_url)}" alt="" loading="lazy"
+               onerror="this.replaceWith('${e}')">`;
+}
+
 // ---------- Тост-уведомления ----------
 let _toastTimer;
 function toast(msg) {
